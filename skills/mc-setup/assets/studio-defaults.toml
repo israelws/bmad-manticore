@@ -71,7 +71,8 @@ loudness-target = -14
 #   "high"    a beat roughly every 10 to 20 seconds
 #   "medium"  a beat roughly every 20 to 45 seconds
 #   "low"     a beat roughly every 45 to 90 seconds
-# Interviewed at setup; per-format overrides live in the Production Bible.
+# Interviewed at setup; a format profile's frontmatter overrides the tier for
+# that format, and the Production Bible mirrors the resolved value.
 graphics-frequency = "medium"
 
 [defaults.cta]

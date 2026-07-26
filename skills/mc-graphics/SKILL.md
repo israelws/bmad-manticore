@@ -28,7 +28,7 @@ Engine workspaces live at `{engines-path}/<engine>/`; initialize on first use pe
 
 ## Source before authoring
 
-For each beat, reach first for a fitting HyperFrames block or installed skill across the whole catalog and its footage-facing effects (`npx hyperframes add`, existing brand-themed blocks in the engine workspace), per `{skill-root}/engines/hyperframes.md`. For simple moves on a finished still (fly-in and fly-out, staged builds), prefer the ffmpeg recipes in `{skill-root}/references/motion-recipes.md`. Author from scratch via the html lane (`{skill-root}/engines/html.md`) or the design-prompting loop (`{skill-root}/engines/design-prompting.md`) only when nothing fits. Everything themes through tokens.json; no hardcoded colors or fonts.
+For each beat, reach first for a fitting HyperFrames block or installed skill across the whole catalog and its footage-facing effects (`npx hyperframes add`, existing brand-themed blocks in the engine workspace), per `{skill-root}/engines/hyperframes.md`. For simple moves on a finished still (fly-in and fly-out, staged builds), prefer the ffmpeg recipes in `{skill-root}/references/motion-recipes.md`; where a recipe's default move and the Production Bible's motion feel disagree, the bible wins, because the recipes are mechanics and the feel is the creator's. Author from scratch via the html lane (`{skill-root}/engines/html.md`) or the design-prompting loop (`{skill-root}/engines/design-prompting.md`) only when nothing fits. Everything themes through tokens.json; no hardcoded colors or fonts.
 
 ## Build and verify
 

@@ -9,7 +9,7 @@ Act as the creator's graphics planner. The outcome is an approved beat table: `b
 
 The table is the engine-neutral contract between the script and the graphics engines, and no graphics code exists until the creator approves it at gate 3. Three consumers set the bar. The creator must be able to picture every beat from its storyboard paragraph alone. mc-assets farms from the `asset` column. mc-graphics renders from `type`, `engine`, and `composition` with nobody in the room to ask what was meant.
 
-Read `{skill-root}/references/density-and-creativity.md` (overlay taxonomy, transcript triggers, density tiers, pacing curve) and `{skill-root}/references/cta-placement.md` (zones, caps, spacing) in full before planning any beats.
+Read `{skill-root}/references/density-and-creativity.md` (overlay taxonomy, transcript triggers, tier character, pacing curve) and `{skill-root}/references/cta-placement.md` (zones, caps, spacing) in full before planning any beats.
 
 ## The rule that is not inferable
 
@@ -25,7 +25,7 @@ NEVER ESTIMATE A BEAT TIME. Every `start` is DERIVED: take the anchor word's tim
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
 2. Read `project.json` (confirm `approvals.cutplan` is a date and stage is `beats`), `script.md`, `cut/edl.json`, `transcript/`, `cut/editorial-review.md`, and the format profile at `{formats-path}/<format>.md`. Gate 2 has passed, so the editorial review exists; if it does not, hand back to mc-cut.
-3. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that the medium mix and the composition ambition below cannot happen without it, then route to mc-setup and stop.
+3. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that the medium mix, the composition ambition below, and the density and variety numbers this plan is held to cannot happen without it, then route to mc-setup and stop.
 4. Read `{brand-path}/tokens.json`. If it does not exist, tell the creator it is missing and that brand-themed beats cannot happen without it, then route to mc-setup and stop.
 5. Fix this plan's vocabulary and budget from the format profile frontmatter: `beat-types` is the whole type vocabulary for the format, and `density` maps tiers to seconds-per-beat budgets. The tier is `graphics-frequency` in `[style]` of the studio config (`medium` when unset), unless the profile frontmatter overrides it.
 
@@ -39,11 +39,7 @@ Walk the EDITED timeline (times derive from `cut/edl.json`, not the raw take). S
 
 Propose the most visually ambitious composition the Production Bible allows before settling for less: the creator can downgrade a diagram to a card in seconds, but cannot upgrade a card to a diagram without doing the planner's job for it. Escalate the treatment to the content, so a number gets a stat treatment, a process gets a staged diagram, and a comparison gets a split or table build.
 
-Across the plan as a whole, hold the reference's quotas. Nothing scripted checks them, so they are yours to hold:
-
-- At least 6 distinct types in any video over 5 minutes, and no single type over 40% of rows.
-- Static text cards are the composition of last resort: under a third of rows (the reference sets a tighter 25% target), and never two in a row.
-- Beat count at or above the tier floor, which is edited runtime in minutes times the tier's beats-per-minute floor (high 3, medium 1.5, low 0.7), with roughly double density in the first 30-60 seconds per the pacing curve.
+Across the plan as a whole, hold the numbers in the Production Bible's visual density and variety section: type variety, the cap on static text cards, and the beats-per-minute floor for the resolved tier, which times the edited runtime in minutes gives the minimum beat count. Resolve them for this format first, since a per-project-type section in the bible overrides the global one. Nothing scripted checks them, so they are yours to hold, and the first 30-60 seconds run at roughly double density per the pacing curve.
 
 `engine` comes from the format profile defaults and PIPELINE.md's engine policy. A profile that still names `remotion` in its `engine_overlays`/`engine_stingers` frontmatter (a studio configured before 2.0.0) is written into the table as `hyperframes` per the engine policy's compatibility alias, never as `remotion`. Rows needing farmed assets carry the asset id in `asset` and become the mc-assets shopping list; all other rows carry `null`.
 

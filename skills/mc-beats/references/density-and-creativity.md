@@ -6,27 +6,26 @@ Rules for proposing the graphics beat table from a transcript of talking-head, t
 
 The failure this reference exists to prevent is a sparse sequence of plain text cards: a handful of unanimated bullet slides scattered through a long video. In high-retention channels, plain talking head is the minority of screen time in the opening and the supporting visuals are diverse: b-roll, animated diagrams, screenshots with motion, annotated zooms, stat treatments.
 
-Hard rules for every plan:
+How much variety a plan owes, how few plain cards it may carry, and how many beats a minute must hold are the creator's numbers, in the Production Bible's visual density and variety section. This is the craft that makes them reachable:
 
-- Variety quota: at least 6 distinct overlay types (from the taxonomy below) in any video over 5 minutes. No single type may account for more than 40% of proposed beats.
-- Plain text card cap: static text-only cards at most 25% of beats, never more than 2 consecutive beats of the same type. Every text moment is first considered for an upgrade to an icon plus text callout, an animated list build, a stat counter, a diagram, or a screenshot.
+- A static text-only card is the composition of last resort. Every text moment is first considered for an upgrade to an icon plus text callout, an animated list build, a stat counter, a diagram, or a screenshot.
 - Escalate the treatment to the content: a number deserves a big animated stat, not a sentence on a card. A process deserves a diagram, not a paragraph. A comparison deserves a split-screen or table build, not two bullets.
 - Default to motion: every element enters and exits with simple animation (fade, slide, pop, word-by-word build). Static frames read as unfinished.
 - When in doubt, propose the richer option and mark it optional. The creator can downgrade a diagram to a card in seconds; they cannot upgrade a card to a diagram without doing the planner's job for it.
 
-The opposite failure is real too, and the density targets below are ceilings as well as floors. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up. Space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks.
+The opposite failure is real too: the creator's floor is a floor, not a target to overshoot. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up. Space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks. Past roughly 6 beats a minute at the high tier, 3 at medium, and 1.3 at low, the density is itself the clutter.
 
-## Density tiers
+## Tier character
 
-The graphics-frequency tier comes from `[style]` in the studio config, with per-format overrides recorded in the Production Bible. Two budgets matter: visual changes (any pattern interrupt: cut, zoom, b-roll, graphic) and graphic beats (what this plan proposes). These targets govern the beats:
+The graphics-frequency tier comes from `graphics-frequency` in `[style]` of the studio config, overridden for one format by that format profile's frontmatter. Its numbers come from elsewhere: seconds per beat from the format profile's `density` frontmatter, and the beats-per-minute floor and the variety and card-cap quotas from the Production Bible's visual density and variety section, which carries any per-project-type override of those three. What each tier feels like on screen:
 
-| Tier | Seconds per beat | Beats per minute | Character | Typical mix |
-|---|---|---|---|---|
-| high | ~10-20 s | 3-6 | Retention-editing style; something new on screen most of the time; layered sound cues | Heavy b-roll, keyword pops, animated diagrams, zoom annotations; talking head rarely bare for more than 10 s |
-| medium | ~20-45 s | 1.5-3 | Polished educational channel; every key point visualized, breathing room between | B-roll, lower thirds, list builds, stat cards, screenshots; bare talking head fine for 15-20 s stretches |
-| low | ~45-90 s | 0.7-1.3 | Minimal, authoritative; graphics only where they genuinely clarify | Chapter cards plus the occasional stat, diagram, or screenshot at the most important moments only |
+| Tier | Character | Typical mix |
+|---|---|---|
+| high | Retention-editing style; something new on screen most of the time; layered sound cues | Heavy b-roll, keyword pops, animated diagrams, zoom annotations; talking head rarely bare for more than 10 s |
+| medium | Polished educational channel; every key point visualized, breathing room between | B-roll, lower thirds, list builds, stat cards, screenshots; bare talking head fine for 15-20 s stretches |
+| low | Minimal, authoritative; graphics only where they genuinely clarify | Chapter cards plus the occasional stat, diagram, or screenshot at the most important moments only |
 
-Pacing reference points, not tier budgets: fast-paced editing changes something visually every 5-7 seconds, with roughly 19 shot changes in the first 30 seconds and bare talking head under 20% of those shots; a new visual stimulus every 20-30 seconds reads as high production; through long talking stretches, one well-placed graphic every 30-60 seconds is the sparsest pacing that still holds attention.
+Pacing reference points for visual changes of every kind (cut, zoom, b-roll, graphic), which are a wider budget than the graphic beats this plan proposes: fast-paced editing changes something visually every 5-7 seconds, with roughly 19 shot changes in the first 30 seconds and bare talking head under 20% of those shots; a new visual stimulus every 20-30 seconds reads as high production; through long talking stretches, one well-placed graphic every 30-60 seconds is the sparsest pacing that still holds attention.
 
 ## Pacing curve (apply at every tier, front-loaded)
 
