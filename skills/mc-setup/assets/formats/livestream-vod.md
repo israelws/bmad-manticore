@@ -35,30 +35,23 @@ Post-production of a recorded livestream (or any long single-take source) into a
 
 - None yet. A recurring show should promote its packaging spec (locked thumbnail anchors vs per-episode variables) into the `{brand-path}/templates/` folder so mc-package can generate against it.
 
-## Learnings
-
-(mc-retro appends here; newest first, ISO dated.)
-
-### 2026-07-07 asset tiers, live loading, and post-publish hygiene
-
-- Two-tier assets: evergreen chrome (scene stills, the persistent frame/bar system, host and CTA lower thirds, the show mark) is built ONCE and reused every episode from `common/` and `{brand-path}/`. Only per-episode TOPIC graphics get made fresh, and they are mined from the episode OUTLINE or plan before the show, never rebuilt from the transcript after.
-- Loaded live, not re-edited later: the graphics pack must be prepped and switchable in the streaming tool BEFORE going live. The live pack itself is the livestream-pack format via mc-stream-pack; this VOD format consumes its output.
-- Post-publish hygiene, once the published master is confirmed safe: purge reproducible render scratch from `work/` (intermediate segments, the baked review render, the debug image trail), keep transcripts in a keeper location, hold `deliverables/` to one blessed asset per slot (alternates stay in `work/`), and promote newly reusable chrome to `common/` and `{brand-path}/`.
-
-### 2026-07-06 format pivot after the first full run: publish as-is, graphics go live
-
-- After completing one full post-hoc re-edit, the creator pivoted the format: the VOD publishes as-is with a light trim; no overlay baking in post. The graphics effort moves ahead of the stream as a live-triggered per-episode scene and asset pack. Post-production shrinks to packaging, shorts, and socials. The design rules below still govern the live pack's look.
-
-### 2026-07-06 first full run: design rules learned through review corrections
+## Design rules
 
 - Never shrink the source video to make room for UI; overlay on the full frame. No solid bars or panels behind persistent UI; elements float directly on the video with their own treatment.
 - Popups are large, centered, and straight; they fly in and out fast (about 0.35s) with a sound cue. Never small, askew, or corner-placed where they cover faces.
 - Photos get snug native-aspect frames; never fixed-size cards with filler panels.
 - The formal brand palette wears out fast on in-video graphics. Casual treatments and the referenced platform's own colors often read better on overlays; save the formal palette for professional surfaces. Record the split in the Production Bible.
-- Real imagery beats invented: use real screenshots, box art, and artwork wherever the real thing exists; invent only when it does not. Verify every claim-bearing graphic against the transcript; an analysis sweep once invented an offer the creator never made.
+- Real imagery beats invented: use real screenshots, box art, and artwork wherever the real thing exists; invent only when it does not. Verify every claim-bearing graphic against the transcript, because an analysis lane can invent an offer or claim that was never made.
 - No live-tense wording on VOD graphics ("Enjoying the stream?"); persistent show branding stays.
 - Community member names appear exactly as the creator uses them on stream, never normalized.
 - Emoji inside rasterized SVG text render as black silhouettes; keep SVG text vector-only.
 - Render mechanics: crop source-edge defects before upscaling (crop then scale keeps aspect); infinite generator sources need `shortest=1` AND an explicit `-t` cap or the render runs away; splitting a long render into parallel segments and concatenating halves wall-clock time; always extract spot-check frames before delivering a render.
-- Packaging: title and thumbnail must complement, never repeat; whichever carries the promise, the other carries the intrigue. A recurring show keeps a thumbnail template (locked anchors vs per-episode variables) in the brand folder.
-- Keep deliverables lean: one blessed asset per slot in `deliverables/`; alternates stay in `work/`.
+- Packaging: title and thumbnail must complement, never repeat; whichever carries the promise, the other carries the intrigue.
+
+## Post-publish hygiene
+
+Once the published master is confirmed safe: purge reproducible render scratch from `work/` (intermediate segments, the baked review render, the debug image trail), keep transcripts in a keeper location, hold `deliverables/` to one blessed asset per slot (alternates stay in `work/`), and promote newly reusable chrome to `common/` and `{brand-path}/`.
+
+## Learnings
+
+(mc-retro appends here; newest first, ISO dated.)
