@@ -93,7 +93,6 @@ Sources for the brief: the approved beat row (timing, anchor, composition), the 
 Once the creator approves the look, it becomes durable engine code rather than a one-off:
 
 - HyperFrames: port the comp into a themed block in the HyperFrames workspace, all colors and fonts read from tokens, timing parameterized so the block can be reused at other durations.
-- OGraf: only when the target supports it (editor lane per `[editor] ograf-editable`, always for the live lane); rebuild the approved look as an OGraf graphic via mc-ograf rather than wrapping the HTML.
 - Foreign HTML (exported from a design surface) is sanitized before entering a workspace: strip or inline every external reference, replace hardcoded colors and fonts with token references (a grep for hex literals not present in tokens is the lint), retrofit the seek contract, and double-render a frame to verify determinism.
 - Record promoted blocks in the format profile's Templates section so future beats assemble them instead of redesigning.
 

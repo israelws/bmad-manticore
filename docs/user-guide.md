@@ -24,7 +24,7 @@ my-studio/                        <- install here, run everything from here
     projects/                     <- one folder per video, fully self-contained
       my-first-video/
       another-video/
-    engines/                      <- HyperFrames / OGraf workspaces
+    engines/                      <- HyperFrames workspaces
 ```
 
 Install:
@@ -97,7 +97,7 @@ Two platform notes: on a CUDA machine the onnx-asr lane escalates to GPU with `u
 
 Render-first does not lock you out of your editor; the exit ramp is always built. Tell mc-setup what you finish in:
 
-- DaVinci Resolve or Final Cut Pro: an FCPXML timeline of trimmable clips (implemented), exported on every cut approval. Resolve 21+ users can also set `ograf-editable = true` to receive lower thirds as OGraf packages that stay editable inside Resolve's Inspector. Linux note: the free edition of Resolve cannot decode or encode H.264, H.265, or AAC, so the timeline imports but mp4 media needs transcoding to ProRes or DNxHR first (or Resolve Studio).
+- DaVinci Resolve or Final Cut Pro: an FCPXML timeline of trimmable clips (implemented), exported on every cut approval. Linux note: the free edition of Resolve cannot decode or encode H.264, H.265, or AAC, so the timeline imports but mp4 media needs transcoding to ProRes or DNxHR first (or Resolve Studio).
 - Premiere Pro: the xmeml export lane has not landed yet, so Premiere users work from the cut plan, edl.json, and the rendered preview/final, which map 1:1 onto manual cuts.
 - Descript or anything else: set `timeline-format = "none"`. You get the word-level transcript, cut decisions with reasons, and the renders; you apply the cuts in your tool.
 

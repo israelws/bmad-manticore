@@ -61,7 +61,6 @@ Walk the `[defaults]` tables from `customize.toml`, offering current values as d
 
 - Video defaults: offer to ffprobe a recent recording and fill them from reality instead of asking the creator to recall numbers.
 - Speaking rate: leave the default and say mc-script will flag it as unmeasured. The voice bible measures it for real.
-- `ograf-editable = true` ONLY for DaVinci Resolve 21+, whatever another editor claims to import.
 - A non-default interview marker cue is not a config key. Record it as `cutplan_flags = '--marker-cues "<cue>"'` in `{project-root}/_bmad/custom/mc-cut.toml`, edited surgically.
 
 **Render consent is performed, not assumed.** Before writing `[render]`, present the render-first default and get an explicit answer: Manticore previews every cut and beats iteration and offers a final at gate 4, while the timeline export and all assets are ALWAYS produced alongside, so the creator can move into their own editor at any step. Declining makes the renders offers instead of automatic outputs and changes nothing else. Offer the quality knobs only if asked.

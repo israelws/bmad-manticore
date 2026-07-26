@@ -95,10 +95,11 @@ Gate 4 has two equally supported paths: the offered `renders/final.mp4`, or the 
 ## Engine policy
 
 - HyperFrames: the graphics engine. Per-video overlay beats, stingers and transitions (dual render: VP9 alpha WebM for OBS + ProRes 4444 for the editor timeline lane), and shorts karaoke captions. Registry blocks before authoring (`npx hyperframes add`). Export overlay-only ProRes 4444 MOV with alpha. Apache 2.0, local, no commercial-use threshold.
-- OGraf (the mc-ograf skill): ONLY when the target supports it. Editor lane requires `[editor] ograf-editable = true` (DaVinci Resolve 21+); the live lane (OBS/SPX-GC via mc-stream-pack) is editor-independent. Everyone else gets baked alpha MOVs, which work in every editor.
+- Baked alpha MOVs are the deliverable everywhere, unconditionally. There is no editable-graphics lane and no editor-dependent branch: what one editor gets, every editor gets.
 - Everything is themed through `{brand-path}/tokens.json`. Component sourcing rule: registries and open libraries first, author from scratch only when nothing fits.
 - Engine workspaces (the pinned HyperFrames project) live at `{engines-path}`; mc-setup or the first graphics run initializes them.
-- Compatibility alias (unconditional, any vintage): `remotion` is a permanent alias for `hyperframes` wherever an engine is named, whether a beat-table `engine` value or a format profile's `engine_overlays`/`engine_stingers` frontmatter. A studio configured before 2.0.0 keeps its own copied profiles that may still say `remotion`; every skill reads that as `hyperframes` and no creator file is rewritten. There is no Remotion engine doc or workspace to route to, and the removal rationale is in `mc-graphics/engines/hyperframes.md`.
+- Compatibility aliases (unconditional, any vintage): `remotion` and `ograf` are permanent aliases for `hyperframes` wherever an engine is named, whether a beat-table `engine` value or a format profile's `engine_overlays`/`engine_stingers` frontmatter. A studio configured before a given engine was dropped keeps its own copied profiles and beat tables naming it; every skill reads those as `hyperframes` and no creator file is ever rewritten. Neither has an engine doc or workspace to route to. Remotion was removed 2026-07-22 (rationale in `mc-graphics/engines/hyperframes.md`); OGraf and its editable-graphics lane were removed 2026-07-26.
+- `[editor] ograf-editable` is a retired key. A studio config written before 2.1.0 may still carry it; ignore it rather than acting on it, and never write it.
 
 ## The beat table (engine-neutral graphics contract)
 
@@ -110,7 +111,7 @@ One row per graphic beat, produced by mc-beats, consumed by mc-graphics and mc-a
 Column rules:
 
 - `type` is a beat type from the format profile's `beat-types` frontmatter list (e.g. `lower-third`, `diagram`, `stat-card`, `cta`); the profile is the single type vocabulary for its format. The reserved placeholder `overlay` is legal only when reading legacy tables (tolerance rule below) and is never written.
-- `engine` names the engine that renders the beat, per the Engine policy below (e.g. `hyperframes`, `ograf`, `html`).
+- `engine` names the engine that renders the beat, per the Engine policy below (e.g. `hyperframes`, `html`).
 - `asset` is `null` or a farmed-asset id from `assets/manifest.json`; mc-assets farms the listed assets, mc-graphics composes with them.
 - Tolerance rule: consumers MUST accept rows missing `type`, `engine`, or `asset` (beat tables written by 0.x projects). Treat a missing `type` as the reserved placeholder `overlay` (informational only; rendering keys off `engine` and `composition`), a missing `engine` as the Engine policy default, an `engine` of `remotion` (from any vintage of table, per the Engine policy's compatibility alias) as `hyperframes`, and a missing `asset` as `null`. A stage that rewrites the table (mc-beats) replaces every `overlay` placeholder with a type from the profile's `beat-types`. An in-flight 0.x project never breaks on the extended contract.
 

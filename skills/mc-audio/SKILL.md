@@ -1,6 +1,6 @@
 ---
 name: mc-audio
-description: Farm sound for the studio, local-first: single-voice TTS narration and multi-host dialogue (Kokoro-82M), instrumental music beds (MusicGen-small), and SFX (AudioLDM2), with paid lanes strictly opt-in. A service skill like mc-ograf, not a pipeline stage: no gate, no project.json state; call it from mc-graphics (whooshes, stingers), mc-stream-pack (beds, stinger audio), the voiceover-explainer format (narration), or whenever the creator asks for sound.
+description: Farm sound for the studio, local-first: single-voice TTS narration and multi-host dialogue (Kokoro-82M), instrumental music beds (MusicGen-small), and SFX (AudioLDM2), with paid lanes strictly opt-in. A service skill, not a pipeline stage: no gate, no project.json state; call it from mc-graphics (whooshes, stingers), mc-stream-pack (beds, stinger audio), the voiceover-explainer format (narration), or whenever the creator asks for sound.
 ---
 
 # mc-audio

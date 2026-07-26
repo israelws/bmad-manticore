@@ -10,7 +10,7 @@ Load this file when the creator wants a capability Manticore does not have. Scop
 
 ## Joining the pipeline
 
-New stage skills that join the pipeline must conform to the mc-pipeline contract (stage table, project.json, gates); route the creator through mc-pipeline's docs for that contract rather than improvising one. A capability that serves other skills without owning a stage (the mc-audio and mc-ograf shape) needs no stage-table entry: no gate, no project.json state, called by name from whatever needs it.
+New stage skills that join the pipeline must conform to the mc-pipeline contract (stage table, project.json, gates); route the creator through mc-pipeline's docs for that contract rather than improvising one. A capability that serves other skills without owning a stage (the mc-audio shape) needs no stage-table entry: no gate, no project.json state, called by name from whatever needs it.
 
 ## Check what already exists first
 

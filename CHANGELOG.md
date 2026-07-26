@@ -47,6 +47,12 @@ Every threshold in the new cut path was set by measuring the 20.5 minute take th
 - Audio map granularity 0.3s to 0.10s. The map has to be finer than anything that consumes it. Edge snapping needs the 0.1 to 0.2s gaps between doubled words, and those are precisely the intervals a coarse map omits. The gate now also warns when it is handed a map too coarse to scan against, rather than failing a good transcript with no explanation.
 - Blooper context tightened. Asking for "a 0.5s pause within 3s" flagged the scripted line "that damn term" as almost certainly a flub. Measured, the separation is not subtle: 0.77s of silence beside the scripted line, 7.65s beside the real "Oh fuck." A blooper is next to a STOP, not a breath, so it now asks for 2s of silence within 1.5s and the two classify correctly.
 
+### OGraf removed: one graphics deliverable, every editor
+
+- The mc-ograf skill and the editable-graphics lane are gone. OGraf produced graphics that stayed editable inside DaVinci Resolve 21+ and could be click-triggered live in OBS/SPX-GC, but it cost a second authoring path, a second spec to conform to, and its own scaffold and verify scripts, all to serve one editor version. Baked alpha overlays, which every editor imports, are now the only deliverable.
+- Nothing in an existing studio breaks. `ograf` joins `remotion` as a permanent compatibility alias for `hyperframes` wherever an engine is named, so an in-flight beat table or a copied format profile keeps working and no creator file is rewritten. `[editor] ograf-editable` is retired: a config written before 2.1.0 may still carry it and it is simply ignored.
+- Livestream lower thirds and topic cards are now self-contained local HTML styled from tokens.json, alongside the scenes that already worked that way. SPX-GC and OBS browser sources drive them the same as before, without an editor-specific package format.
+
 ### The rule behind all of it
 
 - New binding convention in AGENTS.md: a check the pipeline claims to perform must be a script that exits non-zero. Four separate defects here shipped through the same hole, QC frames extracted but never asserted on, boundary frames eyeballed while the audio underneath was wrong, beat anchors as a checklist line with no script, and a transcript nothing ever checked. All four were documented, and none could halt.

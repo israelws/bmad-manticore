@@ -86,8 +86,8 @@ ECOSYSTEM_SECTION = re.compile(r"ecosystem|support|community|license|trademark",
 ECOSYSTEM_FILES = {"README.md", "AGENTS.md"}
 
 HEX_RE = re.compile(r"#([0-9A-Fa-f]{6})\b")
-# Shipped placeholder palette (tokens.template.json, scaffold_ograf.py,
-# html_to_png.py safe-zone guides, mc-ograf preview chrome). Generic by
+# Shipped placeholder palette (tokens.template.json, html_to_png.py
+# safe-zone guides). Generic by
 # design; not dogfood brand colors.
 DEFAULT_HEX_ALLOW = {"4f8cff", "2f6fe0", "7faaff", "ff3355", "ffcc00", "0c1322"}
 

@@ -26,7 +26,6 @@
       "skills": [
         "./skills/mc-agent",
         "./skills/mc-setup",
-        "./skills/mc-ograf",
         "./skills/mc-pipeline",
         "./skills/mc-new",
         "./skills/mc-braindump",

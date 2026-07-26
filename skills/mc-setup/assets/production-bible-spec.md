@@ -26,7 +26,7 @@ The video style interview fills the bible interactively. The creator supplies an
 ## Consumers
 
 - mc-beats reads it in step 1 alongside the format profile; density tier and beat-type choices must conform, and its checklist requires composition consistency with the stated overlay style and image-type policy.
-- mc-graphics and mc-ograf read it before authoring anything; it is the styling contract beyond `tokens.json`.
+- mc-graphics reads it before authoring anything; it is the styling contract beyond `tokens.json`.
 - mc-assets: the image-type policy governs lane choice per asset; the sourcing hierarchy applies.
 - mc-package and mc-stream-pack: thumbnail style, series templates, and the CTA section.
 - mc-retro and the studio agent are the writers, per above.
