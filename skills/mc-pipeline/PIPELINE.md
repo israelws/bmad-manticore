@@ -1,13 +1,13 @@
 # PIPELINE.md: The State Machine
 
-The master spec for the Manticore pipeline, owned by mc-pipeline (the router). It defines the stages, the artifacts each stage produces, the approval gates, and the `project.json` contract. Each stage skill is self-contained and carries its own steps, but everything below is the contract they conform to.
+The master spec for the Manticore pipeline, owned by mc-pipeline (the router). It defines the stages, what each hands to the next, the approval gates, and the `project.json` contract. Each stage skill is self-contained and carries its own steps; this is the contract they conform to.
 
-Conventions used below:
+This file is a contract, not a summary of the stages. It carries what crosses a stage boundary. Anything a stage produces and consumes entirely within itself belongs to that skill, and adding it here is how this file goes stale.
 
-- The studio config is the `[modules.manticore]` table in `{project-root}/_bmad/custom/config.toml` (personal overrides in `config.user.toml`), created by mc-setup and resolved with `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Table names like `[owner]`, `[paths]`, `[video]`, `[render]`, `[style]`, `[cta]`, `[live]`, `[editor]`, `[transcription]`, `[assets]`, `[mcp]` refer to its sub-tables. (`[defaults.*]` names appear only inside mc-setup's `customize.toml`, the seed that mc-setup copies from; a resolved studio config has no `[defaults]` table.)
+Two naming notes, because both have caused real confusion:
+
+- Bracketed table names (`[owner]`, `[paths]`, `[render]`, `[editor]`, and the rest) are sub-tables of `[modules.manticore]`, the studio config. `[defaults.*]` names appear only in mc-setup's `customize.toml`, the seed it copies from; a resolved studio config has no `[defaults]` table.
 - `{projects-path}`, `{brand-path}`, `{formats-path}`, `{engines-path}` are the `[paths]` values resolved against `{project-root}`. If `[modules.manticore]` is empty, run mc-setup first; no stage skill proceeds without it.
-- Per-skill defaults and overrides live in each skill's `customize.toml`, resolved with `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Skills read only their own folder and project files, never another skill's folder.
-- "the creator" is the human owner configured in `[owner]`; skills address them by their configured name.
 
 ## Stage sequence (master list)
 
@@ -20,12 +20,12 @@ Format profiles select a subset of these stages (see the `stages:` frontmatter o
 | 3 | outline | mc-outline | gate 1: outline | `outline.md` (hooks + outline + packaging promise) |
 | 4 | script | mc-script | | `script.md` (lint passed, craft QA passed) |
 | 5 | record | the creator | | `raw/*` recordings, constant frame rate |
-| 6 | cut | mc-cut | gate 2: cutplan | `transcript/words.json` (suffixed `<source-id>.words.json` when a project has multiple sources), `cut/audio-map.json`, `cut/transcript-check.json`, `cut/candidates.json`, `cut/edited-transcript.md` + `cut/edited-words.json`, `cut/editorial-review.md` (its HAND TO BEATS section is read by mc-beats at stage 7), `cut/cutplan.md`, `cut/edl.json`, `cut/edl.pre-editorial.json` (the prior EDL, backed up whenever content-tier calls are applied), `cut/edl-check.json`, `cut/rough.fcpxml` (per `[editor] timeline-format`; `none` skips), `renders/preview.mp4` (fast low-res preview, re-rendered each iteration, published with an `<output>.key` sidecar naming the render identity it was built from; once stage 9 has rendered overlays, the router sends the project back through mc-cut to re-render it with graphics composited). A source corrected by `normalize_source.py` is registered in project.json `sources` as the project source of truth |
+| 6 | cut | mc-cut | gate 2: cutplan | `transcript/words.json`, `cut/edl.json`, `cut/cutplan.md`, `cut/editorial-review.md`, `cut/rough.fcpxml` (per `[editor] timeline-format`; `none` skips), `renders/preview.mp4` |
 | 7 | beats | mc-beats | gate 3: beats | `beats/beats.md` (the beat table), `beats/STORYBOARD.md` |
 | 8 | assets | mc-assets | | `assets/` + `assets/manifest.json` |
-| 9 | graphics | mc-graphics | | `graphics/` alpha MOVs + `graphics/HANDOFF.md`; on completion the router routes through mc-cut to re-render `renders/preview.mp4` with the overlays composited |
-| 10 | package | mc-package | | `packaging/titles.md`, `packaging/thumbs/`, `packaging/description.md`, `packaging/chapters.md`, `packaging/captions/` (final.srt, final.vtt, transcript.md, when the cut exists) |
-| 11 | final | the creator, with an offered pipeline render | gate 4: final | `renders/final.mp4` (the offered final-quality render: same EDL, graphics composited from the beat table, delivery resolution per `[video]` delivery-resolution and codec per `[render]`, loudness-normalized to the `[render]` loudness-target unless loudnorm is off), or the creator's own editor render into `renders/` |
+| 9 | graphics | mc-graphics | | `graphics/` alpha MOVs + `graphics/HANDOFF.md` |
+| 10 | package | mc-package | | `packaging/titles.md`, `packaging/thumbs/`, `packaging/description.md`, `packaging/chapters.md`, `packaging/captions/` |
+| 11 | final | the creator, with an offered pipeline render | gate 4: final | `renders/final.mp4`, or the creator's own editor render into `renders/` |
 | 12 | retro | mc-retro | | edits to `{formats-path}/<format>.md` learnings + offending skill files |
 
 Stage 8 (assets) runs before stage 9 (graphics) so the farmed stills and clips exist before graphics composes with them; both unlock at gate 3. Stage 10 may start any time after gate 1 (the packaging promise exists from the outline).
@@ -62,14 +62,14 @@ Field rules:
 - `approvals` values are `null` (not reached), `"pending"` (artifact presented, waiting on the creator), or an ISO date string (approved that day). Only the creator's explicit say-so in conversation moves pending to a date.
 - `artifacts` maps artifact names to paths as they are produced, e.g. `"edl": "cut/edl.json"`.
 - `parent` links a short to its long-form parent project slug.
-- `sources` (optional) registers media inputs as they arrive: `{"id": "camera-a", "file": "raw/camera-a.mp4", "role": "primary", "cfr": true}`. Roles: `primary` (talking-head take), `interview` (a recorded braindump session; the creator reads each question aloud prefixed with the marker cue so the cut stage can segment it mechanically; the default cue is "question from the interviewer", configurable via cutplan.py `--marker-cues` and the setup interview; the older "question from claude" phrasing remains a documented alternative for studios that recorded with it), `screen` (screen share). Stages that ingest media append here.
+- `sources` (optional) registers media inputs as they arrive: `{"id": "camera-a", "file": "raw/camera-a.mp4", "role": "primary", "cfr": true}`. Roles are `primary` (a talking-head take), `interview` (a recorded braindump, segmented mechanically by its spoken marker cue), and `screen` (screen share). Stages that ingest media append here, and a source corrected by mc-cut's `normalize_source.py` is registered as the project's source of truth.
 
 ## The stage skill algorithm
 
 Every mc-* stage skill follows the same shape. No exceptions, no creativity in the mechanics:
 
 1. Resolve the studio config (`resolve_config.py --key modules.manticore`) and the skill's own surface (`resolve_customization.py --skill {skill-root}`); if the studio config is empty, stop and run mc-setup.
-2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route). The one exception is a declared ROUTED ENTRY POINT: a skill the router deliberately re-enters after its own stage has closed. Those touch no gates, no approvals, and no stage fields, so they cannot advance or rewind the project. mc-cut declares two, the composited preview re-render (after stage 9, and again whenever an overlay is re-rendered) and the offered final render at stage 11. A skill with no declared entry points has no exception.
+2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route). The one exception is a declared ROUTED ENTRY POINT: a section a skill declares for the router to re-enter after its own stage has closed. Those touch no gates, no approvals and no stage fields, so they cannot advance or rewind the project, and a skill that declares none has no exception. mc-cut is the only skill with any today.
 3. Read the format profile at `{formats-path}/<format>.md` and any taste files it names (all under `{brand-path}`).
 4. Do the stage work, calling the scripts in the skill's own `scripts/` folder for anything mechanical.
 5. Run the stage's checklist (in the skill file). Fix failures before presenting.
@@ -81,10 +81,16 @@ If the config exists but a key this stage needs is missing or empty, ask for jus
 
 ## Gate behavior
 
-- Gate 1 (outline): the creator approves hook + outline + the title/thumbnail promise before any script is written.
-- Gate 2 (cutplan): the creator approves the cut plan summary (the taste calls, e.g. "trailing 'so' at 42:20, keep or cut?") before the preview render and the exported timeline are treated as the rough cut.
-- Gate 3 (beats): the creator approves the beat table before any graphics code is written.
-- Gate 4 (final): Manticore offers the final-quality render (`renders/final.mp4`) and the creator approves the deliverable. Finishing in their own editor from the always-exported timeline is an equally supported path; approval of either closes the gate. Either way the timeline export, edl.json, cutplan, and overlay assets already exist, so switching paths never loses work.
+What each gate blocks is the part other stages depend on:
+
+| Gate | Approves | Nothing may happen until it clears |
+|---|---|---|
+| 1: outline | hook, outline, the title/thumbnail promise | any script is written |
+| 2: cutplan | the taste calls | the preview and timeline count as the rough cut |
+| 3: beats | the beat table | any graphics code is written |
+| 4: final | the deliverable | publishing |
+
+Gate 4 has two equally supported paths: the offered `renders/final.mp4`, or the creator's own editor render from the always-exported timeline. Approval of either closes it, and because the timeline, edl.json, cutplan and overlays all exist regardless, switching paths never loses work.
 
 ## Engine policy
 
@@ -92,8 +98,7 @@ If the config exists but a key this stage needs is missing or empty, ask for jus
 - OGraf (the mc-ograf skill): ONLY when the target supports it. Editor lane requires `[editor] ograf-editable = true` (DaVinci Resolve 21+); the live lane (OBS/SPX-GC via mc-stream-pack) is editor-independent. Everyone else gets baked alpha MOVs, which work in every editor.
 - Everything is themed through `{brand-path}/tokens.json`. Component sourcing rule: registries and open libraries first, author from scratch only when nothing fits.
 - Engine workspaces (the pinned HyperFrames project) live at `{engines-path}`; mc-setup or the first graphics run initializes them.
-- Remotion was a second engine through 0.x and was removed on 2026-07-22: its license is free only up to 3 people, and its React authoring model bought nothing in a frame-deterministic renderer. Rationale in `mc-graphics/engines/hyperframes.md`.
-- Compatibility alias (unconditional, any vintage): `remotion` is a permanent alias for `hyperframes` wherever an engine is named — a beat-table `engine` value OR a format profile's `engine_overlays`/`engine_stingers` frontmatter. A studio configured before 2.0.0 keeps its own copied profiles that may still say `remotion`; every skill reads that as `hyperframes` and no creator file is rewritten. There is no Remotion engine doc or workspace to route to.
+- Compatibility alias (unconditional, any vintage): `remotion` is a permanent alias for `hyperframes` wherever an engine is named, whether a beat-table `engine` value or a format profile's `engine_overlays`/`engine_stingers` frontmatter. A studio configured before 2.0.0 keeps its own copied profiles that may still say `remotion`; every skill reads that as `hyperframes` and no creator file is rewritten. There is no Remotion engine doc or workspace to route to, and the removal rationale is in `mc-graphics/engines/hyperframes.md`.
 
 ## The beat table (engine-neutral graphics contract)
 
@@ -117,15 +122,13 @@ Deliverable folders hold exactly one blessed asset per slot; alternates, drafts,
 
 ## Cutting rules
 
-The non-negotiable cutting rules (the two-source rule, never cut inside a word, padding, fades, quote + reason per EDL segment, constant frame rate sources) and the gate table that enforces them live in the mc-cut skill, which is the only stage that applies them.
-
-The one rule worth restating here, because it is the root cause of the 2026-07-24 cut-pipeline failures: the TRANSCRIPT is the authority on CONTENT, the AUDIO is the authority on TIMING. No stage derives a cut time, a beat time, or a silence from transcript timestamps.
+mc-cut is the only stage that cuts, so its rules and the gates enforcing them live there. One binds every stage, which is why it is here: the TRANSCRIPT is the authority on CONTENT, the AUDIO is the authority on TIMING. No stage derives a cut time, a beat time, or a silence from transcript timestamps.
 
 ## Verification contract
 
-A check the pipeline claims to perform must be a script that exits non-zero. This is a rule, not a style preference, and it exists because four separate defects shipped through the same hole: QC frames that were extracted but never asserted on, boundary frames that were eyeballed while the audio underneath was wrong, beat anchors that were a checklist line with no script, and a transcript that was never checked at all. Every one was documented and none could halt.
+A check the pipeline claims to perform must be a script that exits non-zero; AGENTS.md carries the rule and the four shipped defects that produced it. What belongs here is the cross-stage view, because no single skill can see it: which gates block what, and where a blocked run can legitimately proceed.
 
-Taste lives in files and mechanics live in scripts. An assertion is a mechanic, so "inspect X" in a skill file is only acceptable alongside a script that fails when X is wrong. A blocking gate carries an acknowledged override (`preflight.py --allow-qc-defects`, `verify_transcript.py --accept-region ... --reason ...`) so a false positive is a recorded human decision rather than a reason to work around the gate silently. The blocking gates today:
+Every blocking gate carries an acknowledged override (`preflight.py --allow-qc-defects`, `verify_transcript.py --accept-region ... --reason ...`), so a false positive becomes a recorded human decision rather than a reason to work around the gate silently.
 
 | Check | Script | Blocks |
 |---|---|---|
@@ -137,10 +140,6 @@ Taste lives in files and mechanics live in scripts. An assertion is a mechanic, 
 
 ## Spatial normalize
 
-`cut/edl.json` is purely TEMPORAL: segments are `{source, start, end}` and the renderers expose no crop, scale, or position transform. So a defect baked into the pixels (a recorded-in border, letterboxing, off-centre framing) cannot be corrected anywhere downstream, and every stage inherits the bad canvas.
+`cut/edl.json` is purely TEMPORAL: segments are `{source, start, end}` and the renderers expose no crop, scale, or position transform. A defect baked into the pixels (a recorded-in border, letterboxing, off-centre framing) therefore cannot be corrected anywhere downstream, and every later stage inherits whatever canvas the cut stage leaves it.
 
-`mc-cut/scripts/normalize_source.py` is the corrective pass. It runs in the cut stage's preflight, before beats and graphics, because overlays are positioned against the canvas and normalizing later would force every one of them to be repositioned. It emits a corrected master that is registered as the project source, so later steps inherit it automatically.
-
-A spatial crop moves nothing in time, and the script asserts that. An existing transcript, EDL, cutplan, and beat table all stay valid across a normalize: no re-transcribe, no re-cut, no re-plan.
-
-Corrective normalize is global and defect-driven and belongs there. Creative reframing (punch-ins, motion zooms) is per-moment emphasis and belongs to the beats stage, on the already-clean canvas.
+That is why correction is the cut stage's job and mc-cut owns the mechanics. Two consequences bind other stages: a normalize moves nothing in time, so an existing transcript, EDL, cutplan and beat table all stay valid across one; and corrective normalize is global and defect-driven, where creative reframing (punch-ins, motion zooms) is per-moment emphasis belonging to the beats stage, on the already-clean canvas.
