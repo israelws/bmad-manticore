@@ -29,6 +29,7 @@ No config discovery: every function takes explicit arguments. Stdlib only.
 
 import hashlib
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -201,6 +202,223 @@ def resolve_overlays(beats, graphics_dir):
         })
     found.sort(key=lambda o: o["start"])
     return found, missing
+
+
+# --- fast preview compositing: proxies + overlay lanes -----------------------
+#
+# The first real project's preview render took 25+ minutes and stalled twice.
+# Two costs multiplied:
+#   (a) the cut sliced a 4K master into 234 segments, so every render did 234
+#       seek+decodes into 4K video to build a 720p preview;
+#   (b) all 56 overlays went into ONE filtergraph as a 56-deep overlay stack,
+#       so every output frame walked 56 compositing steps whether or not any
+#       overlay was actually on screen.
+#
+# Both have a cheap fix and neither needs a different tool:
+#   (a) PROXY MASTERS. Transcode each source once, linearly, to the preview
+#       height, and cut the preview from the proxy. A linear read plus 234
+#       cheap seeks beats 234 expensive ones, the proxy is reused by every
+#       later re-render, and the final render still cuts from the true master.
+#   (b) OVERLAY LANES. Overlays are intervals in time and mostly do not
+#       overlap. Pack them into the fewest non-overlapping lanes (greedy
+#       interval scheduling), build each lane as a cheap time-sequential
+#       CONCAT of transparent gaps and overlay clips, then stack only the
+#       lanes. Stack depth becomes max-concurrent-overlays instead of
+#       total-overlays: 56 became 2 on the real project.
+#
+# Measured together on that project: about 3 minutes instead of about an hour.
+
+LANE_CODEC_ARGS = {
+    # Lossless with alpha, and it run-length encodes flat transparency, so a
+    # mostly-empty overlay lane costs almost nothing on disk. The default.
+    "qtrle": ["-c:v", "qtrle", "-pix_fmt", "argb"],
+    # The validated original. Much larger files (a 16 min 720p lane runs to
+    # gigabytes), kept for anyone who needs ProRes intermediates.
+    "prores": ["-c:v", "prores_ks", "-profile:v", "4444",
+               "-pix_fmt", "yuva444p10le"],
+}
+DEFAULT_LANE_CODEC = "qtrle"
+
+
+def plan_overlay_lanes(overlays):
+    """Pack overlays into the fewest non-overlapping time lanes (pure).
+
+    Greedy interval scheduling over overlays sorted by start: each overlay
+    goes into the first lane whose last overlay has already ended, otherwise
+    it opens a new lane. The lane count is exactly the maximum number of
+    overlays on screen at once, which is the whole point: it becomes the
+    depth of the final overlay stack.
+
+    Returns a list of lanes, each a list of overlay dicts sorted by start.
+    """
+    lanes = []
+    for ov in sorted(overlays, key=lambda o: (o["start"], o["dur"])):
+        start = ov["start"]
+        for lane in lanes:
+            last = lane[-1]
+            if last["start"] + last["dur"] <= start + 1e-6:
+                lane.append(ov)
+                break
+        else:
+            lanes.append([ov])
+    return lanes
+
+
+def build_lane_filter(lane, total, size, fps):
+    """(inputs, filter_complex) for one overlay lane (pure).
+
+    The lane is a single video the length of the whole timeline: transparent
+    gap, overlay, transparent gap, overlay, ..., trailing gap, concatenated.
+    Gaps are lavfi color sources zeroed to full transparency (a color source
+    carries no usable alpha of its own, so aa=0 is not optional). Every
+    element is normalized to the same size, rate and rgba format because
+    concat refuses mismatched inputs.
+    """
+    if not lane:
+        # A lane with no overlays is a fully-transparent pass, which costs a
+        # whole encode to composite nothing. The caller skips it.
+        return [], ""
+    w, h = size
+    inputs, filters, labels = [], [], []
+    n = 0
+    cursor = 0.0
+
+    def add_gap(dur):
+        nonlocal n
+        if dur <= 0.001:
+            return
+        inputs.extend(["-f", "lavfi", "-t", f"{dur:.3f}",
+                       "-i", f"color=c=black:s={w}x{h}:r={fps}"])
+        filters.append(f"[{n}:v]format=rgba,colorchannelmixer=aa=0,"
+                       f"fps={fps},setpts=PTS-STARTPTS[l{n}]")
+        labels.append(f"[l{n}]")
+        n += 1
+
+    def add_overlay(ov):
+        nonlocal n
+        if ov.get("image"):
+            inputs.extend(["-loop", "1", "-t", f"{ov['dur']:.3f}",
+                           "-i", str(ov["path"])])
+        else:
+            inputs.extend(["-i", str(ov["path"])])
+        filters.append(
+            f"[{n}:v]format=rgba,scale={w}:{h}:force_original_aspect_ratio="
+            f"decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=#00000000,"
+            f"fps={fps},trim=duration={ov['dur']:.3f},setpts=PTS-STARTPTS"
+            f"[l{n}]")
+        labels.append(f"[l{n}]")
+        n += 1
+
+    for ov in lane:
+        add_gap(ov["start"] - cursor)
+        add_overlay(ov)
+        cursor = ov["start"] + ov["dur"]
+    add_gap(total - cursor)
+
+    if not labels:
+        return [], ""
+    graph = ";".join(filters) + ";" + "".join(labels) + \
+        f"concat=n={len(labels)}:v=1:a=0[laneout]"
+    return inputs, graph
+
+
+def build_lane_command(lane, total, size, fps, out_path,
+                       codec=DEFAULT_LANE_CODEC):
+    """ffmpeg argv rendering one overlay lane to an alpha-bearing file (pure)."""
+    inputs, graph = build_lane_filter(lane, total, size, fps)
+    if not graph:
+        return []
+    return (["ffmpeg", "-y", "-hide_banner", "-v", "error"] + inputs +
+            ["-filter_complex", graph, "-map", "[laneout]",
+             "-t", f"{total:.3f}"] +
+            LANE_CODEC_ARGS.get(codec, LANE_CODEC_ARGS[DEFAULT_LANE_CODEC]) +
+            [str(out_path)])
+
+
+def build_lane_composite_command(base, lane_files, output, crf=28,
+                                 preset="veryfast",
+                                 extra_output_flags=()):
+    """ffmpeg argv stacking the (few) lane files onto the base cut (pure).
+
+    This is the pass whose depth used to be the overlay count. It is now the
+    lane count, and the base carries the audio through untouched.
+    """
+    argv = ["ffmpeg", "-y", "-hide_banner", "-v", "error", "-i", str(base)]
+    for lf in lane_files:
+        argv += ["-i", str(lf)]
+    graph, prev = "", "0:v"
+    for i in range(len(lane_files)):
+        tag = f"c{i + 1}"
+        graph += f"[{prev}][{i + 1}:v]overlay=format=auto:shortest=0[{tag}];"
+        prev = tag
+    graph += f"[{prev}]format=yuv420p[vout]"
+    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "0:a?",
+             "-c:v", "libx264", "-preset", preset, "-crf", str(crf),
+             "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart"]
+    argv += list(extra_output_flags)
+    argv += [str(output)]
+    return argv
+
+
+def proxy_path(proxy_dir, source, height):
+    """Where a source's preview proxy lives (pure).
+
+    Named by the source stem plus height so a project's proxies are readable
+    on disk; freshness is decided by the sidecar digest, not the name.
+    """
+    return Path(proxy_dir) / f"{Path(source).stem}-{height}p.mp4"
+
+
+def proxy_is_fresh(proxy, source):
+    """True when a proxy exists and was built from this exact source (pure-ish).
+
+    The sidecar records the source's content digest at build time, so a
+    re-recorded take with the same filename correctly invalidates its proxy.
+    """
+    proxy = Path(proxy)
+    sidecar = proxy.with_name(proxy.name + ".src")
+    if not proxy.is_file() or not sidecar.is_file():
+        return False
+    try:
+        return sidecar.read_text(encoding="utf-8").strip() == \
+            content_digest(source, cheap=True)
+    except OSError:
+        return False
+
+
+def build_proxy_command(source, out, height, crf=26, preset="veryfast"):
+    """ffmpeg argv transcoding a source to a preview proxy (pure).
+
+    One linear pass. Audio is re-encoded rather than copied so the proxy is
+    seekable and self-contained; the preview's audio comes from here too, and
+    the final render never touches proxies.
+    """
+    return ["ffmpeg", "-y", "-hide_banner", "-v", "error", "-i", str(source),
+            "-vf", f"scale=-2:{height}", "-c:v", "libx264", "-preset", preset,
+            "-crf", str(crf), "-pix_fmt", "yuv420p", "-c:a", "aac",
+            "-b:a", "160k", "-movflags", "+faststart", str(out)]
+
+
+def write_proxy_sidecar(proxy, source):
+    """Record which source build this proxy, for proxy_is_fresh."""
+    proxy = Path(proxy)
+    proxy.with_name(proxy.name + ".src").write_text(
+        content_digest(source, cheap=True) + "\n", encoding="utf-8")
+
+
+def proxied_edl(edl, mapping):
+    """A copy of the EDL with every source swapped for its proxy (pure).
+
+    Timecodes are untouched: a proxy is the same footage at a smaller frame
+    size, so every EDL time stays valid against it. Sources with no proxy in
+    the mapping are left pointing at the original.
+    """
+    out = json.loads(json.dumps(edl))
+    for seg in out.get("segments", []):
+        seg["source"] = mapping.get(seg["source"], seg["source"])
+    if out.get("source") in mapping:
+        out["source"] = mapping[out["source"]]
+    return out
 
 
 # --- ffmpeg filtergraph and command -----------------------------------------
@@ -544,6 +762,152 @@ def ffmpeg_version():
     parts = proc.stdout.splitlines()[0].split()
     # "ffmpeg version 8.1.2 Copyright ..."
     return parts[2] if len(parts) >= 3 and parts[0] == "ffmpeg" else "unknown"
+
+
+# --- render identity, atomic publish, output validation ---------------------
+#
+# On 2026-07-24 a stale background render (an EDL that had since been
+# superseded) finished late and wrote renders/preview.mp4 CONCURRENTLY with
+# the current render. Two processes interleaved bytes into one path and the
+# creator was handed an unplayable file: "Invalid NAL unit size", "missing
+# picture in access unit". Nothing detected it, because the only post-render
+# check was the container duration, which a corrupt file still reports
+# happily.
+#
+# Three defences, all needed:
+#   1. Never write the deliverable path directly. Render to a unique temp
+#      path and os.replace it into place, which is atomic on one filesystem,
+#      so a reader sees either the old file or the new one and never a
+#      half-written one.
+#   2. Key a render by its CONTENT, and re-check that key just before
+#      publishing. A render whose EDL changed underneath it is stale and must
+#      discard its output instead of clobbering a newer one. Content keying
+#      beats process cancellation because it also catches a crashed, detached,
+#      or forgotten job, which is exactly what happened.
+#   3. Prove the file decodes before calling it a deliverable.
+
+
+def render_key(edl, params=None, overlay_digests=None, ffmpeg=None):
+    """Content identity of a render: what is being rendered, never when.
+
+    Two renders agree on a key exactly when they would produce the same
+    bytes: same EDL, same parameters, same overlay file contents, same
+    ffmpeg. The key is what makes supersede detection work without locks.
+    """
+    payload = {
+        "edl": edl,
+        "params": dict(sorted((params or {}).items())),
+        "overlays": dict(sorted((overlay_digests or {}).items())),
+        "ffmpeg": ffmpeg if ffmpeg is not None else ffmpeg_version(),
+    }
+    raw = json.dumps(payload, sort_keys=True, ensure_ascii=False,
+                     default=str).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:32]
+
+
+def temp_render_path(output, key):
+    """A per-process temp path beside the output.
+
+    The pid is load-bearing: keying the temp file on content alone would give
+    two concurrent renders of the SAME edl one shared temp path, recreating
+    the interleaved-write corruption one level down.
+    """
+    output = Path(output)
+    return output.with_name(f".{output.stem}.{key[:12]}.{os.getpid()}.part"
+                            f"{output.suffix}")
+
+
+def validate_render(path, expected_duration=None, tolerance=0.5):
+    """Decode the whole file and check its duration. Returns (ok, problems).
+
+    The decode pass is the check that was missing: `ffmpeg -v error -f null -`
+    walks every packet and prints on any decode error. Container duration
+    alone cannot see a corrupt bitstream.
+    """
+    problems = []
+    path = Path(path)
+    if not path.is_file():
+        return False, [f"output not written: {path}"]
+    if path.stat().st_size == 0:
+        return False, [f"output is empty: {path}"]
+    try:
+        proc = subprocess.run(
+            ["ffmpeg", "-v", "error", "-i", str(path), "-f", "null", "-"],
+            capture_output=True, text=True)
+    except OSError as e:
+        return False, [f"cannot run ffmpeg to validate: {e}"]
+    stderr = proc.stderr.strip()
+    if proc.returncode != 0 or stderr:
+        problems.append("decode errors: " + (stderr[-800:] or
+                                             f"exit {proc.returncode}"))
+    actual = probe_duration(path)
+    if actual is None:
+        problems.append("no readable duration")
+    elif expected_duration is not None and \
+            abs(actual - expected_duration) > tolerance:
+        problems.append(f"duration {actual:.3f}s vs expected "
+                        f"{expected_duration:.3f}s (tolerance {tolerance}s)")
+    return not problems, problems
+
+
+def current_render_key(edl_path, params=None, overlay_digests=None,
+                       ffmpeg=None):
+    """Re-read the EDL from disk and compute its key now, or None.
+
+    None means the EDL is unreadable, in which case the caller must NOT treat
+    the render as superseded: an unreadable EDL is a separate problem and
+    discarding a good render over it would lose work.
+    """
+    try:
+        edl = json.loads(Path(edl_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return render_key(edl, params, overlay_digests, ffmpeg)
+
+
+def publish_render(tmp_path, output, key=None):
+    """Atomically move a validated temp render into place.
+
+    Also writes a <output>.key sidecar naming the render identity now in the
+    file. Derived artifacts (fcpxml, boundary frames, cutplan summary) can
+    record the same key, so drift after a re-cut is detectable rather than
+    silent.
+    """
+    tmp_path, output = Path(tmp_path), Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(tmp_path, output)
+    if key:
+        output.with_name(output.name + ".key").write_text(key + "\n",
+                                                          encoding="utf-8")
+    return output
+
+
+def write_json_atomic(path, payload):
+    """Write JSON via a temp file and an atomic replace.
+
+    Any file a running render might read concurrently must be written this
+    way. A plain write truncates first, so a reader arriving mid-write sees a
+    torn or empty file: cut/edl.json in particular is read by every render,
+    including ones already in flight. Torn reads here are not corruption of
+    the deliverable (current_render_key treats an unreadable EDL as "cannot
+    tell" and declines to supersede), but they do abort renders for no
+    reason.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    os.replace(tmp, path)
+    return path
+
+
+def discard_render(tmp_path):
+    """Remove an abandoned temp render, ignoring an already-gone file."""
+    try:
+        Path(tmp_path).unlink()
+    except OSError:
+        pass
 
 
 def segment_identity(edl, seg):

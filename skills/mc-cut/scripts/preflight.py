@@ -33,16 +33,24 @@ Contract:
              it in project.json sources as the project source of truth; every
              later step (transcription, EDL times, renders, timeline export)
              must use it, never the VFR original.
-    qc       with --qc-frames <dir>, the first and last frame of each source
-             are extracted as <stem>-first.jpg / <stem>-last.jpg for the
-             source QC pass (edge defects, wrong aspect, letterboxed or
-             cropped content), inspected before any render is built.
+    qc       edge-defect QC that ASSERTS AND HALTS (exit 3). Several frames
+             across each take (not just the first and last: a frame effect
+             can be switched on mid-recording) are analysed for a flat
+             decorative border ring and for an active area whose aspect does
+             not match the container. On a hit the inferred active-content
+             rectangle is reported and the stage stops, because a baked-in
+             border cannot be fixed downstream: the EDL is time-only, so
+             every later stage inherits the bad canvas. Fix with
+             normalize_source.py, or pass --allow-qc-defects when the
+             framing is intentional. --qc-frames <dir> additionally writes
+             the sampled stills for the creator to eyeball.
     summary  json.dumps on stdout: per-file {path, codec, width, height,
-             duration, fps, vfr, cfr_master, qc_frames}, plus
-             {"disk": {free_bytes, needed_bytes, ok}} and "all_cfr".
+             duration, fps, vfr, cfr_master, qc_frames, qc}, plus
+             {"disk": {free_bytes, needed_bytes, ok}}, "all_cfr" and "qc_ok".
 
 Exit codes: 0 ok (VFR found still exits 0; the caller reads "vfr" and
-"all_cfr"), 1 probe/remux failure or disk refusal of a planned remux, 2 usage.
+"all_cfr"), 1 probe/remux failure or disk refusal of a planned remux, 2
+usage, 3 source QC defect (stop and get the creator's call).
 
 STATUS: implemented (pure logic covered by scripts/tests/test-preflight.py;
 probe/remux path covered by the synthesized-fixture integration test there).
@@ -55,11 +63,23 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import composite_core as core
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # noqa: E402
+import composite_core as core  # noqa: E402
 
 STANDARD_RATES = ("24000/1001", "24/1", "25/1", "30000/1001", "30/1",
                   "50/1", "60000/1001", "60/1")
+
+# Frames sampled across a take for the edge-defect QC pass. More than two,
+# because a frame effect can be switched on after recording starts.
+DEFAULT_QC_SAMPLES = 7
+# Analysis thumbnail size. Small on purpose: downscaling averages out sensor
+# noise so a flat decorative border reads as genuinely flat.
+QC_ANALYSIS_SIZE = (96, 54)
+# Per-channel variance under which a ring of pixels counts as a flat colour.
+DEFAULT_RING_VARIANCE = 12.0
+# How far a border's colour must sit from the picture inside it before it is
+# a decorative frame rather than just a dark scene.
+DEFAULT_RING_DISTANCE = 24.0
 
 
 def parse_rate(text):
@@ -156,24 +176,244 @@ def probe_media(path):
     }
 
 
-def extract_qc_frames(media, qc_dir, duration):
-    """First and last frame stills for the edge-defect QC pass."""
+def qc_sample_times(duration, samples=DEFAULT_QC_SAMPLES):
+    """Timestamps to inspect across a take (pure).
+
+    Two frames is not a QC pass. The original check looked at frame 0 and a
+    frame half a second from the end, which cannot see a defect that starts
+    mid-take (a frame effect toggled on after recording began). These sample
+    evenly across the interior, avoiding the very first and last frames where
+    fades and encoder warm-up live.
+    """
+    if not duration or duration <= 0:
+        return [0.0]
+    samples = max(2, samples)
+    lo, hi = duration * 0.02, duration * 0.98
+    if hi <= lo:
+        return [max(0.0, duration / 2)]
+    step = (hi - lo) / (samples - 1)
+    return [round(lo + i * step, 3) for i in range(samples)]
+
+
+def extract_qc_frames(media, qc_dir, duration, times=None):
+    """QC stills across the take, for the creator to eyeball after a halt."""
     qc_dir.mkdir(parents=True, exist_ok=True)
     stem = Path(media).stem
     written = []
-    jobs = [("first", ["-i", str(media)])]
-    if duration and duration > 0.5:
-        jobs.append(("last", ["-sseof", "-0.5", "-i", str(media)]))
-    for name, input_args in jobs:
-        dest = qc_dir / f"{stem}-{name}.jpg"
+    for i, t in enumerate(times if times is not None
+                          else qc_sample_times(duration)):
+        dest = qc_dir / f"{stem}-qc{i:02d}.jpg"
         proc = subprocess.run(
-            ["ffmpeg", "-y", *input_args, "-frames:v", "1", "-q:v", "3",
-             "-update", "1", str(dest)],
+            ["ffmpeg", "-y", "-ss", f"{t:.3f}", "-i", str(media),
+             "-frames:v", "1", "-q:v", "3", "-update", "1", str(dest)],
             capture_output=True, text=True,
         )
         if proc.returncode == 0 and dest.is_file():
             written.append(str(dest))
     return written
+
+
+# --- source QC: edge defects ------------------------------------------------
+#
+# On the first real project a 4K take carried a decorative frame RECORDED
+# INTO THE PIXELS: a black outer border plus a rounded orange ring, an Ecamm
+# frame effect left on during capture, with the subject framed off-centre.
+# It passed preflight, transcription, candidate detection, the EDL, gate 2
+# and the preview render completely untouched. The creator caught it by eye
+# after the cut was already locked.
+#
+# The step-2 QC pass named this exact defect class ("black edges, wrong
+# aspect, letterboxed or cropped content") and still let it through, because
+# it only EXTRACTED frames and left the looking to whoever happened to
+# remember. QC that cannot halt is not QC, so this asserts and exits 3.
+#
+# It is deliberately a HALT-AND-ASK, not an auto-fix: a uniform edge can be
+# legitimate (a dark set, a vignette, an intentional letterbox). The script
+# reports the inferred active-content rectangle and stops; the creator
+# confirms, and normalize_source.py does the correction.
+
+
+def _px(pixels, w, i, x, y):
+    o = ((y * w) + x) * 3
+    return pixels[o], pixels[o + 1], pixels[o + 2]
+
+
+def ring_pixels(pixels, w, h, depth):
+    """The pixels exactly `depth` in from the frame edge (pure)."""
+    out = []
+    if depth < 0 or depth * 2 >= min(w, h):
+        return out
+    for x in range(depth, w - depth):
+        out.append(_px(pixels, w, 0, x, depth))
+        out.append(_px(pixels, w, 0, x, h - 1 - depth))
+    for y in range(depth + 1, h - depth - 1):
+        out.append(_px(pixels, w, 0, depth, y))
+        out.append(_px(pixels, w, 0, w - 1 - depth, y))
+    return out
+
+
+def mean_color(px):
+    """Per-channel mean of a pixel list (pure)."""
+    if not px:
+        return (0.0, 0.0, 0.0)
+    n = len(px)
+    return tuple(sum(p[c] for p in px) / n for c in range(3))
+
+
+def max_channel_variance(px):
+    """Largest per-channel variance across a pixel list (pure).
+
+    A decorative border is a FLAT colour, so its variance is near zero, while
+    real picture content at the frame edge varies. This is the whole
+    discriminator."""
+    if len(px) < 2:
+        return 0.0
+    means = mean_color(px)
+    return max(
+        sum((p[c] - means[c]) ** 2 for p in px) / len(px)
+        for c in range(3)
+    )
+
+
+def color_distance(a, b):
+    """Euclidean distance between two mean colours (pure)."""
+    return sum((a[c] - b[c]) ** 2 for c in range(3)) ** 0.5
+
+
+def detect_border_depth(pixels, w, h, var_limit=DEFAULT_RING_VARIANCE,
+                        max_frac=0.25):
+    """How many pixels of flat border ring the frame carries (pure).
+
+    Walks inward from the edge while each successive ring is FLAT (low
+    variance). Stops at the first ring carrying real picture detail. A
+    multi-colour decorative frame (black outer border then an orange ring) is
+    still one contiguous run of flat rings, so both layers are counted, which
+    is what the real defect needed.
+
+    Returns 0 when the outermost ring already carries picture content, which
+    is the normal, healthy case.
+    """
+    limit = int(min(w, h) * max_frac)
+    depth = 0
+    while depth < limit:
+        px = ring_pixels(pixels, w, h, depth)
+        if not px or max_channel_variance(px) > var_limit:
+            break
+        depth += 1
+    return depth
+
+
+def border_is_distinct(pixels, w, h, depth, min_distance=DEFAULT_RING_DISTANCE):
+    """True when the flat border differs from the picture inside it (pure).
+
+    Guards the false positive that matters: a genuinely dark or flat SCENE
+    whose edges happen to be uniform. If the border and the interior are the
+    same colour there is no decorative frame, just a flat shot.
+    """
+    if depth <= 0:
+        return False
+    border = mean_color(ring_pixels(pixels, w, h, 0))
+    inner = ring_pixels(pixels, w, h, depth + 1)
+    if not inner:
+        return False
+    return color_distance(border, mean_color(inner)) >= min_distance
+
+
+def active_rect(w, h, depth):
+    """The content rectangle inside a border of `depth` (pure)."""
+    return (depth, depth, w - 2 * depth, h - 2 * depth)
+
+
+def scale_rect(rect, from_size, to_size):
+    """Map a rectangle measured on a thumbnail onto the full frame (pure).
+
+    Values round to even numbers because encoders reject odd dimensions.
+    """
+    fx, fy = from_size
+    tx, ty = to_size
+    sx, sy = tx / fx, ty / fy
+    x, y, rw, rh = rect
+    return (core.even(x * sx), core.even(y * sy),
+            core.even(rw * sx), core.even(rh * sy))
+
+
+def aspect_of(rect):
+    """Width over height of a rectangle (pure)."""
+    _, _, w, h = rect
+    return (w / h) if h else 0.0
+
+
+def sample_frame_rgb(media, t, w, h):
+    """One frame as raw rgb24 bytes at a small analysis size, or None.
+
+    Downscaling before analysis is deliberate: it averages away sensor noise
+    and compression artefacts, so a flat border reads as genuinely flat, and
+    it keeps the whole check in stdlib with no imaging dependency.
+    """
+    proc = subprocess.run(
+        ["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(media),
+         "-frames:v", "1", "-vf", f"scale={w}:{h}",
+         "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+        capture_output=True,
+    )
+    if proc.returncode != 0 or len(proc.stdout) < w * h * 3:
+        return None
+    return proc.stdout[:w * h * 3]
+
+
+def qc_source(media, duration, width, height, samples=DEFAULT_QC_SAMPLES,
+              aspect_tolerance=0.02):
+    """Inspect a source for edge defects. Returns a QC verdict dict.
+
+    Reports the WORST (deepest) border found across the sampled frames, so a
+    frame effect that starts mid-take is caught even though the first frame
+    is clean. `ok` false means stop and ask the creator.
+    """
+    verdict = {
+        "ok": True,
+        "samples": 0,
+        "border_depth_frac": 0.0,
+        "active_rect": None,
+        "active_aspect": None,
+        "declared_aspect": (width / height) if width and height else None,
+        "defects": [],
+    }
+    aw, ah = QC_ANALYSIS_SIZE
+    worst_depth, worst_pixels = 0, None
+    times = qc_sample_times(duration, samples)
+    for t in times:
+        pixels = sample_frame_rgb(media, t, aw, ah)
+        if pixels is None:
+            continue
+        verdict["samples"] += 1
+        depth = detect_border_depth(pixels, aw, ah)
+        if depth > worst_depth and border_is_distinct(pixels, aw, ah, depth):
+            worst_depth, worst_pixels = depth, pixels
+    if not verdict["samples"]:
+        verdict["defects"].append("could not sample any frame for QC")
+        verdict["ok"] = False
+        return verdict
+
+    if worst_depth > 0 and worst_pixels is not None:
+        thumb_rect = active_rect(aw, ah, worst_depth)
+        full_rect = scale_rect(thumb_rect, (aw, ah), (width, height))
+        verdict["border_depth_frac"] = round(worst_depth / min(aw, ah), 4)
+        verdict["active_rect"] = list(full_rect)
+        verdict["active_aspect"] = round(aspect_of(full_rect), 4)
+        verdict["defects"].append(
+            f"flat border ring {verdict['border_depth_frac'] * 100:.1f}% deep "
+            f"on every edge; active content is "
+            f"{full_rect[2]}x{full_rect[3]} at +{full_rect[0]}+{full_rect[1]} "
+            f"of {width}x{height}")
+        declared = verdict["declared_aspect"]
+        if declared and abs(verdict["active_aspect"] - declared) > \
+                aspect_tolerance:
+            verdict["defects"].append(
+                f"active area aspect {verdict['active_aspect']:.3f} does not "
+                f"match the container's {declared:.3f} (letterboxed, "
+                "pillarboxed, or a non-16:9 recording region)")
+        verdict["ok"] = False
+    return verdict
 
 
 def build_summary(files, disk):
@@ -194,6 +434,14 @@ def main(argv=None):
                         help="dir for first/last frame QC stills")
     parser.add_argument("--disk-path", default=None,
                         help="volume to disk-check (default: first file's dir)")
+    parser.add_argument("--qc-samples", type=int, default=DEFAULT_QC_SAMPLES,
+                        help=f"frames sampled across each take for the "
+                             f"edge-defect QC (default {DEFAULT_QC_SAMPLES})")
+    parser.add_argument("--no-qc", action="store_true",
+                        help="skip the edge-defect QC pass entirely")
+    parser.add_argument("--allow-qc-defects", action="store_true",
+                        help="report QC defects but do not halt (use only "
+                             "when the framing is intentional)")
     args = parser.parse_args(argv)
 
     files = []
@@ -263,13 +511,48 @@ def main(argv=None):
             return 1
         entry["cfr_master"] = str(dst)
 
-    if args.qc_frames:
-        for entry in files:
+    # Source QC: assert, then HALT. Extracting frames and hoping someone
+    # looks at them is what let a baked-in border reach a locked cut.
+    qc_failed = []
+    for entry in files:
+        media = entry["cfr_master"] or entry["path"]
+        if args.qc_frames:
             entry["qc_frames"] = extract_qc_frames(
-                entry["cfr_master"] or entry["path"], Path(args.qc_frames),
-                entry["duration"])
+                media, Path(args.qc_frames), entry["duration"])
+        if args.no_qc:
+            continue
+        entry["qc"] = qc_source(media, entry["duration"], entry["width"],
+                                entry["height"], samples=args.qc_samples)
+        if not entry["qc"]["ok"]:
+            qc_failed.append(entry)
 
-    print(json.dumps(build_summary(files, disk), indent=2))
+    summary = build_summary(files, disk)
+    summary["qc_ok"] = not qc_failed
+    print(json.dumps(summary, indent=2))
+
+    if qc_failed and not args.allow_qc_defects:
+        print("\nSOURCE QC FAILED. Stopping before transcription or any "
+              "render.", file=sys.stderr)
+        for entry in qc_failed:
+            print(f"\n  {entry['path']}", file=sys.stderr)
+            for d in entry["qc"]["defects"]:
+                print(f"    - {d}", file=sys.stderr)
+            rect = entry["qc"].get("active_rect")
+            if rect:
+                print(f"    inferred active content: crop="
+                      f"{rect[2]}:{rect[3]}:{rect[0]}:{rect[1]}",
+                      file=sys.stderr)
+        print("\nA baked-in border or a non-matching active area cannot be "
+              "fixed later: the EDL is time-only, so every downstream stage "
+              "inherits the bad canvas.\nEither correct it now with "
+              "normalize_source.py (a spatial crop moves nothing in time, so "
+              "an existing transcript, EDL and cutplan stay valid), or "
+              "re-run with --allow-qc-defects if the framing is "
+              "intentional.", file=sys.stderr)
+        if args.qc_frames:
+            print(f"QC stills for eyeballing: {args.qc_frames}",
+                  file=sys.stderr)
+        return 3
     return 0
 
 

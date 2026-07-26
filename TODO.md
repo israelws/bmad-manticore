@@ -1,6 +1,26 @@
 # TODO / Roadmap
 
-State as of 2026-07-07, the 1.0.0 release. Read AGENTS.md first (module conventions and design invariants), then `skills/mc-pipeline/PIPELINE.md` (the runtime contract). CHANGELOG.md records what landed in 1.0. This file is the roadmap; delete items as they land.
+State as of 2026-07-25. Read AGENTS.md first (module conventions and design invariants), then `skills/mc-pipeline/PIPELINE.md` (the runtime contract). CHANGELOG.md records what has landed. This file is the roadmap; delete items as they land.
+
+## Release gate: cut-pipeline validation
+
+The cut-pipeline remediation (see the 2.1.0 changelog entry) is covered by synthesized fixtures in CI, one per failure class from the original bug report:
+
+| Failure class | Fixture |
+|---|---|
+| Long-audio OOM | `mc-cut/scripts/tests/test-transcribe.py` TestTranscribeWindowed |
+| Silently dropped speech | `mc-cut/scripts/tests/test-verify_transcript.py` TestTheRealFailure |
+| Dead air invisible to the cutter | `mc-cut/scripts/tests/test-analyze_audio.py` TestRealTakeShape, and test-cutplan.py TestSilenceComesFromAudioNotGaps |
+| Section redo and blooper left in | `mc-cut/scripts/tests/test-cutplan.py` TestSectionRedo, TestBlooper |
+| Baked-in border passing QC | `mc-cut/scripts/tests/test-preflight.py` TestQcHaltsEndToEnd |
+| Concurrent renders corrupting the output | `mc-cut/scripts/tests/test-render_preview.py` TestSupersedeEndToEnd |
+
+Synthesized fixtures cannot prove real-model behavior, so before release run the manual validation once against a real long take on Apple Silicon and record the numbers in the PR:
+
+- `transcribe.py` on a take of 20 minutes or more: exits 0, no OOM, and the word count is within about 2 percent of a known-good reference for that take.
+- `verify_transcript.py` passes on that transcript. Then deliberately re-run the transcription with `--window 120`, confirm it FAILS and names dropped regions, and keep the two reports side by side.
+- `analyze_audio.py` on the same take reports silence counts and totals in the expected range for its dead air (the reference take: about 400 intervals, about 300s).
+- A composited preview of a long 4K cut with many overlays completes in single-digit minutes and reports `"validated": true`.
 
 ## 1.0.x fast-follows
 
@@ -46,7 +66,7 @@ What mc-audio does not cover yet (the shipped ladder, validation record, and lim
 The cross-platform local lane landed (onnx-asr running the same parakeet-tdt-0.6b-v3 weights on Windows, Linux, and Intel Mac; see CHANGELOG Unreleased). What remains:
 
 - Metered API providers behind the same `[transcription]` switch if demand shows up, opt-in only: deepgram-nova3 (keyterm biasing), elevenlabs-scribe (same output shape as the parakeet lane). Also the documented cloud tier for non-European-language creators (Parakeet v3 covers 25 European languages).
-- Real-hardware validation of the onnx-asr lane on Windows and Linux (A/B against parakeet-mlx on identical audio comparing word text, starts, AND gap_before/gap_after values, since the onnx lane derives word ends from start-only timestamps and silence-based cutting rides on the gaps; CUDA escalation; chunk-boundary quality).
+- Real-hardware validation of the onnx-asr lane on Windows and Linux (A/B against parakeet-mlx on identical audio comparing word text and starts; CUDA escalation; chunk-boundary quality). This became MORE urgent, not less, with the 2.1.0 windowing fix: both lanes now share one driver (`transcribe_windowed`), so a change made for the mlx lane lands on onnx too. Note that gap_before/gap_after are no longer a validation target, because cutting no longer rides on them (silence comes from the audio map); the lanes are still expected to differ there, and that is now documented rather than a defect.
 
 ### Shorts karaoke captions
 

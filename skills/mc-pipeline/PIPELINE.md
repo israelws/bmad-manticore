@@ -20,7 +20,7 @@ Format profiles select a subset of these stages (see the `stages:` frontmatter o
 | 3 | outline | mc-outline | gate 1: outline | `outline.md` (hooks + outline + packaging promise) |
 | 4 | script | mc-script | | `script.md` (lint passed, craft QA passed) |
 | 5 | record | the creator | | `raw/*` recordings, constant frame rate |
-| 6 | cut | mc-cut | gate 2: cutplan | `transcript/words.json` (suffixed `<source-id>.words.json` when a project has multiple sources), `cut/candidates.json`, `cut/cutplan.md`, `cut/edl.json`, `cut/rough.fcpxml` (per `[editor] timeline-format`; `none` skips), `renders/preview.mp4` (fast low-res preview, re-rendered each iteration; once stage 9 has rendered overlays, the router sends the project back through mc-cut to re-render it with graphics composited) |
+| 6 | cut | mc-cut | gate 2: cutplan | `transcript/words.json` (suffixed `<source-id>.words.json` when a project has multiple sources), `cut/audio-map.json`, `cut/transcript-check.json`, `cut/candidates.json`, `cut/edited-transcript.md` + `cut/edited-words.json`, `cut/editorial-review.md` (its HAND TO BEATS section is read by mc-beats at stage 7), `cut/cutplan.md`, `cut/edl.json`, `cut/edl.pre-editorial.json` (the prior EDL, backed up whenever content-tier calls are applied), `cut/edl-check.json`, `cut/rough.fcpxml` (per `[editor] timeline-format`; `none` skips), `renders/preview.mp4` (fast low-res preview, re-rendered each iteration, published with an `<output>.key` sidecar naming the render identity it was built from; once stage 9 has rendered overlays, the router sends the project back through mc-cut to re-render it with graphics composited). A source corrected by `normalize_source.py` is registered in project.json `sources` as the project source of truth |
 | 7 | beats | mc-beats | gate 3: beats | `beats/beats.md` (the beat table), `beats/STORYBOARD.md` |
 | 8 | assets | mc-assets | | `assets/` + `assets/manifest.json` |
 | 9 | graphics | mc-graphics | | `graphics/` alpha MOVs + `graphics/HANDOFF.md`; on completion the router routes through mc-cut to re-render `renders/preview.mp4` with the overlays composited |
@@ -69,7 +69,7 @@ Field rules:
 Every mc-* stage skill follows the same shape. No exceptions, no creativity in the mechanics:
 
 1. Resolve the studio config (`resolve_config.py --key modules.manticore`) and the skill's own surface (`resolve_customization.py --skill {skill-root}`); if the studio config is empty, stop and run mc-setup.
-2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route).
+2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route). The one exception is a declared ROUTED ENTRY POINT: a skill the router deliberately re-enters after its own stage has closed. Those touch no gates, no approvals, and no stage fields, so they cannot advance or rewind the project. mc-cut declares two, the composited preview re-render (after stage 9, and again whenever an overlay is re-rendered) and the offered final render at stage 11. A skill with no declared entry points has no exception.
 3. Read the format profile at `{formats-path}/<format>.md` and any taste files it names (all under `{brand-path}`).
 4. Do the stage work, calling the scripts in the skill's own `scripts/` folder for anything mechanical.
 5. Run the stage's checklist (in the skill file). Fix failures before presenting.
@@ -117,4 +117,30 @@ Deliverable folders hold exactly one blessed asset per slot; alternates, drafts,
 
 ## Cutting rules
 
-The non-negotiable cutting rules (never cut inside a word, padding, fades, quote + reason per EDL segment, frame-verified boundaries, constant frame rate sources) live in the mc-cut skill, which is the only stage that applies them.
+The non-negotiable cutting rules (the two-source rule, never cut inside a word, padding, fades, quote + reason per EDL segment, constant frame rate sources) and the self-verify contract live in the mc-cut skill, which is the only stage that applies them.
+
+The one rule worth restating here, because it is the root cause of the 2026-07-24 cut-pipeline failures: the TRANSCRIPT is the authority on CONTENT, the AUDIO is the authority on TIMING. No stage derives a cut time, a beat time, or a silence from transcript timestamps.
+
+## Verification contract
+
+A check the pipeline claims to perform must be a script that exits non-zero. This is a rule, not a style preference, and it exists because four separate defects shipped through the same hole: QC frames that were extracted but never asserted on, boundary frames that were eyeballed while the audio underneath was wrong, beat anchors that were a checklist line with no script, and a transcript that was never checked at all. Every one was documented and none could halt.
+
+Taste lives in files and mechanics live in scripts. An assertion is a mechanic, so "inspect X" in a skill file is only acceptable alongside a script that fails when X is wrong. A blocking gate carries an acknowledged override (`preflight.py --allow-qc-defects`, `verify_transcript.py --accept-region ... --reason ...`) so a false positive is a recorded human decision rather than a reason to work around the gate silently. The blocking gates today:
+
+| Check | Script | Blocks |
+|---|---|---|
+| Source edge defects | `mc-cut/scripts/preflight.py` (exit 3) | transcription and everything after |
+| Transcript completeness | `mc-cut/scripts/verify_transcript.py` | candidate detection |
+| Cut integrity | `mc-cut/scripts/verify_edl.py` | rendering, timeline export, gate 2 |
+| Beat anchor placement | `mc-beats/scripts/verify_anchors.py` | gate 3 and graphics |
+| Render output integrity | `render_preview.py` / `render_final.py` | publishing the output file |
+
+## Spatial normalize
+
+`cut/edl.json` is purely TEMPORAL: segments are `{source, start, end}` and the renderers expose no crop, scale, or position transform. So a defect baked into the pixels (a recorded-in border, letterboxing, off-centre framing) cannot be corrected anywhere downstream, and every stage inherits the bad canvas.
+
+`mc-cut/scripts/normalize_source.py` is the corrective pass. It runs in the cut stage's preflight, before beats and graphics, because overlays are positioned against the canvas and normalizing later would force every one of them to be repositioned. It emits a corrected master that is registered as the project source, so later steps inherit it automatically.
+
+A spatial crop moves nothing in time, and the script asserts that. An existing transcript, EDL, cutplan, and beat table all stay valid across a normalize: no re-transcribe, no re-cut, no re-plan.
+
+Corrective normalize is global and defect-driven and belongs there. Creative reframing (punch-ins, motion zooms) is per-moment emphasis and belongs to the beats stage, on the already-clean canvas.

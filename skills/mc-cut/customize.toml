@@ -19,17 +19,58 @@ activation_steps_append = []
 # "file:{project-root}/..." paths whose contents are loaded as facts.
 persistent_facts = []
 
-# Extra flags appended to the cutplan.py invocation, e.g.
-# "--min-silence 0.5" or a --marker-cues override for interview sources
-# (default marker cue "question from the interviewer"; pass
-# --marker-cues "question from claude" for projects recorded against the
-# older convention). mc-setup's marker-cue interview question records a
-# non-default cue here, in the team override file. Empty means the script
-# defaults (min-silence 0.7, retake window 16, run 3).
+# Silence floor in dBFS for analyze_audio.py, passed as --noise at step 3a.
+# This is NOT taste and NOT a universal: it is a property of the creator's
+# room and mic. Room tone on a decent mic sits well under -30; a noisy room
+# needs -35 or -40. It matters more than it looks, because the audio map is
+# the timing source of truth for the whole stage AND the input to the
+# transcript completeness gate: set it too high and almost nothing registers
+# as silent, which starves the cutter and makes the gate misbehave.
+#
+# Note this is the FLOOR (what counts as silent), not the map resolution.
+# analyze_audio's --map-granularity is deliberately not exposed: the
+# calibration record establishes it must stay finer than every consumer, so
+# it is a mechanic, not a knob.
+silence_floor_db = -30.0
+
+# Extra flags appended to the cutplan.py invocation. Empty means the script
+# defaults: min-silence 0.30, keep-ms 200, retake window 16, run 3,
+# section-run 8, section-window-s 45.
+#
+# NOTE: cutplan.py REFUSES (exit 2) when -o, --audio-map or --voice-bible
+# appear twice, so this string cannot redirect the output or swap the timing
+# source of truth. The boundary below is enforced, not just documented.
+#
+# Pacing (the two that change how the edit FEELS):
+#   --min-silence 0.30  interior silences shorter than this are the
+#                       speaker's rhythm and are left completely alone.
+#                       Raise it for a slower, more deliberate read.
+#   --keep-ms 200       breathing room kept inside each tightened silence.
+#                       Lower is tighter; 0 is machine-gunned, don't.
+#
+# Section re-reads (--section-run, --section-window-s): how long a repeated
+# run must be, and how close in TIME, to count as a redo rather than a
+# deliberate callback. Widen the window for a rambling delivery.
+#
+# Interview sources: --marker-cues overrides the default cue "question from
+# the interviewer" (pass --marker-cues "question from claude" for projects
+# recorded against the older convention). mc-setup's marker-cue interview
+# question records a non-default cue here, in the team override file.
+#
+# --blooper-cues overrides the expletive/reset vocabulary; per-creator, so
+# it belongs in an override file rather than here.
+#
+# Note: --audio-map and --voice-bible are passed by the SKILL (resolved
+# paths), not from this file.
 cutplan_flags = ""
 
-# Extra flags appended to the render_preview.py / render_final.py
-# invocations, e.g. "--height 540" (preview) or "--parallel 4 --crf 16"
-# (final). Empty means the script defaults.
+# ESCAPE HATCH for render flags the studio config does not model, e.g.
+# "--segment-target-seconds 300". Encoder settings have ONE home and it is not
+# here: preview-height, preview-crf, final-crf, loudnorm and loudness-target
+# live in [render] / [video] of the studio config, and the skill emits those
+# first with this string appended last. Because the last occurrence wins,
+# restating a key the config owns here silently overrides it, and which value
+# applies then depends on emission order rather than on any stated rule.
+# So do not put --height, --crf, or the loudness flags in these.
 preview_flags = ""
 final_flags = ""

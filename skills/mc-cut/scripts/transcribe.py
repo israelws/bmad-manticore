@@ -34,9 +34,19 @@ Contract:
               times round to 2 decimals, confidence to 4. "i" is the word index.
               gap_before = start - previous word's end (first word: its start).
               gap_after  = next word's start - end (last word: duration - end).
-              gaps never go negative (clamped to 0.0). The shape is identical
-              across providers; downstream consumers (cutplan.py) never need to
-              know which lane produced the file.
+              gaps never go negative (clamped to 0.0). "window_s"/"overlap_s"
+              record the windowing this transcript was produced with.
+
+              The JSON SHAPE is identical across providers, but gap VALUES are
+              not comparable between lanes and neither lane's gaps are a
+              timing source of truth. parakeet absorbs a pause into the
+              preceding token's end, so an mlx-lane gap across real silence
+              can read 0.0; the onnx lane caps derived word ends
+              (WORD_END_CAP_FRAMES) precisely to avoid that, so its gaps are
+              closer to real but still only advisory. Consumers deciding WHERE
+              TO CUT must use the audio silence map from analyze_audio.py, not
+              these gaps (see mc-cut/SKILL.md). Gaps remain useful as a weak
+              signal for sentence-start detection and nothing else.
     provider  from the studio config [transcription] table; this script is the
               switch. "auto" (the default) picks per platform:
                   macOS Apple Silicon  -> parakeet-mlx (the reference lane)
@@ -68,15 +78,38 @@ Contract:
               automatically; otherwise it runs on CPU, and if nvidia-smi is
               on PATH it prints a loud warning that the GPU escalation is
               needed (or failed) instead of silently running slow.
-    chunking  parakeet-mlx chunks long audio internally. The onnx-asr lane
-              caps around 20-30 s per call, so this script extracts fixed
-              20 s windows with 2 s overlap via ffmpeg (16 kHz mono wav),
-              offsets each chunk's timestamps by its window start, and merges
-              at the overlap midpoint on word boundaries with a seam-repair
-              pass (the two chunks time boundary words independently, so a
-              take kept by both sides deduplicates and a take kept by
-              neither restores from the nearer chunk): no word is split,
-              duplicated, or dropped across chunks.
+    chunking  EVERY lane windows. Both providers extract fixed 20 s windows
+              with 3 s overlap via ffmpeg (16 kHz mono wav), recognize each
+              window in ISOLATION, offset each chunk's timestamps by its
+              window start, and merge at the overlap midpoint on word
+              boundaries with a seam-repair pass (the two chunks time boundary
+              words independently, so a take kept by both sides deduplicates
+              and a take kept by neither restores from the nearer chunk): no
+              word is split, duplicated, or dropped across chunks.
+
+              This is NOT an onnx-asr accommodation, and short windows are not
+              optional on either lane. parakeet's decoder SILENTLY DROPS whole
+              spans inside long windows, worst around the many pauses of a
+              teleprompter read: no error, no warning, just missing
+              paragraphs. Measured on one 20.5 min take (2026-07-24):
+                  chunk_duration=120  -> 3,446 words, 3 paragraphs lost
+                  90 s isolated windows -> 3,308 words, still lossy
+                  20 s isolated windows -> 3,546 words, complete
+              An earlier version of this docstring claimed parakeet-mlx chunks
+              long audio internally and the mlx lane called
+              model.transcribe(<whole file>) with no chunk_duration. That was
+              false twice over: the call OOMs on Apple Silicon above roughly
+              15 min of 4K source (Metal buffer ceiling), and working around
+              the OOM with a large chunk_duration silently loses speech. Do
+              not "optimize" this back into fewer, longer windows, and do not
+              rely on model.transcribe(..., chunk_duration=...) as a
+              substitute for isolated windows.
+
+              --window/--overlap tune the windowing; the defaults are the
+              validated values and the recorded window_s/overlap_s in the
+              output say what a given transcript actually used. Whatever the
+              setting, verify_transcript.py is the gate that proves the
+              result is complete.
     confidence  parakeet-mlx reports per-token confidence natively. The
               onnx-asr lane maps per-token scores when the runtime exposes
               them (logprobs are exponentiated into probabilities, values
@@ -128,9 +161,13 @@ FRAME_S = 0.08
 # this many frames past its start; otherwise every pause would be absorbed
 # into the preceding word and the gap data cutting depends on would read 0.
 WORD_END_CAP_FRAMES = 3
-# onnx-asr caps most models around 20-30 s per call; fixed windows + overlap.
+# Fixed transcription windows, applied on EVERY lane. 20 s is the empirically
+# validated ceiling for lossless parakeet decoding (see the `chunking` note in
+# the module docstring); longer windows silently drop speech on the mlx lane
+# and exceed most onnx models' per-call cap. 3 s of overlap gives the seam
+# repair in merge_chunk_tokens enough context to resolve boundary words.
 CHUNK_WINDOW_S = 20.0
-CHUNK_OVERLAP_S = 2.0
+CHUNK_OVERLAP_S = 3.0
 
 # SentencePiece word-boundary marker used by the ONNX tokenizer.
 SP_MARK = "▁"
@@ -231,18 +268,95 @@ def probe_duration(media):
     return float(out.stdout.strip())
 
 
-def transcribe_parakeet(media, model_id):
-    """Run parakeet-mlx and return (full_text, tokens, duration).
+def mlx_tokens_to_dicts(tokens, clamp=None):
+    """Convert parakeet-mlx AlignedTokens into the shared token dict shape (pure).
 
-    tokens are AlignedToken objects (text/start/end/confidence). Import is
-    local so the pure helpers stay importable without the model dependency.
+    AlignedToken carries text/start/end/confidence, and its raw text already
+    leads with a space at a word boundary, which is the same marker
+    group_subwords and _word_runs key on. So the conversion is a straight
+    field copy: no grouping, no timestamp derivation, no confidence mapping.
+    clamp, when given, caps end times at the window length. A bare
+    whitespace token carries its word boundary onto the next token rather
+    than emitting an empty word (mirroring onnx_tokens_to_parakeet).
+    """
+    out = []
+    pending_space = False
+    for t in tokens:
+        text = str(_get(t, "text"))
+        if text.strip() == "":
+            if text.startswith(" "):
+                pending_space = True
+            continue
+        if pending_space:
+            if not text.startswith(" "):
+                text = " " + text
+            pending_space = False
+        start = float(_get(t, "start"))
+        end = float(_get(t, "end"))
+        if clamp is not None:
+            end = min(end, float(clamp))
+        if end < start:
+            end = start
+        out.append({
+            "text": text,
+            "start": start,
+            "end": end,
+            "confidence": float(_get(t, "confidence")),
+        })
+    return out
+
+
+def transcribe_windowed(media, recognize_window, window=CHUNK_WINDOW_S,
+                        overlap=CHUNK_OVERLAP_S):
+    """Drive any per-window recognizer over isolated windows and merge.
+
+    The lane-agnostic transcription path: plan fixed windows, extract each to
+    a 16 kHz mono wav via ffmpeg (so video containers work on every lane),
+    hand it to `recognize_window(wav_path, length) -> token dicts` with times
+    relative to the window, offset those into absolute time, and merge at the
+    overlap midpoints. Returns (full_text, tokens, duration).
+
+    Every provider goes through here. A lane that recognized the whole file
+    in one pass would reintroduce the silent-drop bug documented in the
+    module docstring's `chunking` note.
+    """
+    duration = probe_duration(media)
+    chunks = plan_chunks(duration, window=window, overlap=overlap)
+
+    per_chunk = []
+    with tempfile.TemporaryDirectory(prefix="mc-transcribe-") as tmp:
+        for i, (start, length) in enumerate(chunks):
+            print(
+                f"chunk {i + 1}/{len(chunks)}: {start:.2f}s +{length:.2f}s",
+                file=sys.stderr,
+            )
+            wav = Path(tmp) / f"chunk{i:04d}.wav"
+            extract_chunk(media, start, length, wav)
+            tokens = recognize_window(wav, length)
+            per_chunk.append((start, start + length, offset_tokens(tokens, start)))
+
+    merged = merge_chunk_tokens(per_chunk)
+    text = "".join(t["text"] for t in merged).strip()
+    return text, merged, duration
+
+
+def transcribe_parakeet(media, model_id, window=CHUNK_WINDOW_S,
+                        overlap=CHUNK_OVERLAP_S):
+    """Run parakeet-mlx over isolated windows and return (text, tokens, duration).
+
+    The model loads ONCE and is reused across windows; only the audio handed
+    to it is short. Import is local so the pure helpers stay importable
+    without the model dependency.
     """
     import parakeet_mlx
 
     model = parakeet_mlx.from_pretrained(model_id)
-    result = model.transcribe(str(media))
-    duration = probe_duration(media)
-    return result.text, result.tokens, duration
+
+    def recognize(wav, length):
+        result = model.transcribe(str(wav))
+        return mlx_tokens_to_dicts(result.tokens, clamp=length)
+
+    return transcribe_windowed(media, recognize, window=window, overlap=overlap)
 
 
 # --- onnx-asr lane -----------------------------------------------------------
@@ -571,39 +685,25 @@ def _result_scores(result):
 
 def transcribe_onnx(media, model_id, window=CHUNK_WINDOW_S,
                     overlap=CHUNK_OVERLAP_S):
-    """Run onnx-asr over fixed windows and return (full_text, tokens, duration).
+    """Run onnx-asr over isolated windows and return (text, tokens, duration).
 
-    Every window is extracted to a 16 kHz mono wav via ffmpeg (so video
-    containers work exactly like the mlx lane), recognized with timestamps,
-    converted to parakeet-shaped token dicts, offset by the window start, and
-    merged at overlap midpoints. Imports are local so the pure helpers stay
-    importable without the onnx-asr dependency.
+    Same driver as the mlx lane (transcribe_windowed); this lane supplies only
+    the per-window recognizer, which converts onnx-asr's token/timestamp
+    arrays into the shared token dict shape. Imports are local so the pure
+    helpers stay importable without the onnx-asr dependency.
     """
-    duration = probe_duration(media)
-    chunks = plan_chunks(duration, window=window, overlap=overlap)
     model = _load_onnx_model(model_id)
 
-    per_chunk = []
-    with tempfile.TemporaryDirectory(prefix="mc-transcribe-") as tmp:
-        for i, (start, length) in enumerate(chunks):
-            print(
-                f"chunk {i + 1}/{len(chunks)}: {start:.2f}s +{length:.2f}s",
-                file=sys.stderr,
-            )
-            wav = Path(tmp) / f"chunk{i:04d}.wav"
-            extract_chunk(media, start, length, wav)
-            result = model.with_timestamps().recognize(str(wav))
-            tokens = onnx_tokens_to_parakeet(
-                list(result.tokens),
-                list(result.timestamps),
-                logprobs=_result_scores(result),
-                clamp=length,
-            )
-            per_chunk.append((start, start + length, offset_tokens(tokens, start)))
+    def recognize(wav, length):
+        result = model.with_timestamps().recognize(str(wav))
+        return onnx_tokens_to_parakeet(
+            list(result.tokens),
+            list(result.timestamps),
+            logprobs=_result_scores(result),
+            clamp=length,
+        )
 
-    merged = merge_chunk_tokens(per_chunk)
-    text = "".join(t["text"] for t in merged).strip()
-    return text, merged, duration
+    return transcribe_windowed(media, recognize, window=window, overlap=overlap)
 
 
 def main(argv=None):
@@ -619,7 +719,26 @@ def main(argv=None):
                         help="model id (default per provider: "
                              f"{DEFAULT_MODELS[PROVIDER_MLX]} for parakeet-mlx, "
                              f"{DEFAULT_MODELS[PROVIDER_ONNX]} for onnx-asr)")
+    parser.add_argument("--window", type=float, default=CHUNK_WINDOW_S,
+                        help=f"transcription window seconds (default "
+                             f"{CHUNK_WINDOW_S}; longer windows silently drop "
+                             "speech, see the chunking note in this script)")
+    parser.add_argument("--overlap", type=float, default=CHUNK_OVERLAP_S,
+                        help=f"window overlap seconds (default {CHUNK_OVERLAP_S})")
     args = parser.parse_args(argv)
+
+    if args.overlap < 0 or args.overlap >= args.window:
+        print("error: --overlap must be >= 0 and smaller than --window",
+              file=sys.stderr)
+        return 2
+    if args.window > CHUNK_WINDOW_S:
+        print(
+            f"WARNING: --window {args.window}s exceeds the validated "
+            f"{CHUNK_WINDOW_S}s ceiling. parakeet silently drops speech inside "
+            "long windows. Run verify_transcript.py on the result before "
+            "cutting against it.",
+            file=sys.stderr,
+        )
 
     provider = args.provider
     if provider == PROVIDER_AUTO:
@@ -645,9 +764,11 @@ def main(argv=None):
 
     try:
         if provider == PROVIDER_MLX:
-            text, tokens, duration = transcribe_parakeet(media, model_id)
+            text, tokens, duration = transcribe_parakeet(
+                media, model_id, window=args.window, overlap=args.overlap)
         else:
-            text, tokens, duration = transcribe_onnx(media, model_id)
+            text, tokens, duration = transcribe_onnx(
+                media, model_id, window=args.window, overlap=args.overlap)
     except ImportError as exc:
         print(
             f"error: provider {provider} dependencies unavailable on this "
@@ -666,6 +787,8 @@ def main(argv=None):
         "model": model_id,
         "media": args.media,
         "duration": round(float(duration), 2),
+        "window_s": round(float(args.window), 3),
+        "overlap_s": round(float(args.overlap), 3),
         "text": text.strip(),
         "words": words,
     }
@@ -679,8 +802,11 @@ def main(argv=None):
         "model": model_id,
         "media": args.media,
         "duration": payload["duration"],
+        "window_s": payload["window_s"],
+        "overlap_s": payload["overlap_s"],
         "words": len(words),
         "output": str(output),
+        "next": "verify_transcript.py (completeness gate) before cutplan.py",
     }))
     return 0
 
