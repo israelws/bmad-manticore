@@ -1,6 +1,6 @@
 # Audio Lanes
 
-The provider ladder for every kind of generated sound: a free local default, paid vendors as explicit opt-ins. The three local lanes below were validated end to end on Apple Silicon (M4 Pro, 24 GB) on 2026-07-07: fully local, no cloud, no API keys, no gated Hugging Face models.
+The provider ladder for every kind of generated sound: a free local default, paid vendors as explicit opt-ins. The three local lanes below are validated end to end on Apple Silicon: fully local, no cloud, no API keys, no gated Hugging Face models.
 
 ## TTS: narration and multi-host dialogue
 

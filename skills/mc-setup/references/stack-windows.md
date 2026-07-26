@@ -1,6 +1,6 @@
 # Windows default stack
 
-Selected when check_deps.py reports os Windows. The GPU verdict (nvidia, intel, amd, none, unknown) splits the stack below. Research basis: platform and capabilities audit, 2026-07-21.
+Selected when check_deps.py reports os Windows. The GPU verdict (nvidia, intel, amd, none, unknown) splits the stack below.
 
 ## Default stack (NVIDIA GPU)
 

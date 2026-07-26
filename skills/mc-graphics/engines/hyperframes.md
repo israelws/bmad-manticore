@@ -8,7 +8,7 @@ HyperFrames is pre-1.0 and moves fast, so this file never transcribes its full c
 
 - mc-setup installs them (`npx skills add heygen-com/hyperframes --all --full-depth` for the whole catalog, or `npx hyperframes skills update` for the maintained core set), so the capability surface is known from the beats stage onward. mc-graphics installs them on first use if setup was skipped.
 - `npx hyperframes init` refreshes the core set plus whatever is already installed; `npx hyperframes skills check` reports drift and `npx hyperframes skills update` applies it. Refresh, never blindly expand.
-- The always-current capability index is https://hyperframes.heygen.com/llms.txt. When a beat needs something, consult the installed skills and that index rather than this file.
+- When a beat needs something, read the installed skills rather than this file, and fetch https://hyperframes.heygen.com/llms.txt for the always-current capability index when they do not cover it.
 
 The engine WORKSPACE still initializes lazily on the first graphics run (below); only the lightweight skill knowledge lands at setup. The harness loads skills by its own resolution; nothing here is specific to one agent.
 
@@ -25,10 +25,6 @@ All local and free. These are categories to reach for, not the live list (the sk
 - The engine workspace lives at the creator's `{engines-path}/hyperframes/`, initialized on the first graphics run: `npm install hyperframes@latest`, plus the skills above. Never carry a version number in module docs. Record the resolved engine version in the workspace package.json and upgrade deliberately rather than floating mid-project.
 - Pull the blocks a beat needs before authoring: `npx hyperframes add`. Theme every block through `{brand-path}/tokens.json`.
 - `@hyperframes/studio` is the local timeline GUI with real bidirectional HTML sync (drag a beat in the GUI, the code updates; hand-edit the code, the GUI hot-reloads). Use it for timing nudges after mc-graphics gets close.
-
-## Why this engine and not Remotion
-
-Remotion is not used, recorded here so the decision is not relitigated per video. Its license is free only up to 3 people, and Manticore is a distributed module, so shipping it would hand every creator at a 4+ person company a licensing obligation they did not opt into; HyperFrames is Apache 2.0 with no threshold. Its React model also bought nothing, because in a frame-deterministic renderer state IS a function of frame index: every job it might hold here is a paused GSAP timeline driven by the beat table. Remotion remains the stronger pick for React shops rendering at massive scale. That is not this pipeline.
 
 ## Jobs
 

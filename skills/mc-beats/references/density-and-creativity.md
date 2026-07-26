@@ -1,6 +1,6 @@
 # Density and Creativity Reference
 
-Research-backed rules for proposing the graphics beat table from a transcript of talking-head, tutorial, or livestream-VOD content. Goal: maximize retention through purposeful visual variety without clutter.
+Rules for proposing the graphics beat table from a transcript of talking-head, tutorial, or livestream-VOD content. Goal: maximize retention through purposeful visual variety without clutter.
 
 ## The creativity mandate
 
@@ -14,7 +14,7 @@ Hard rules for every plan:
 - Default to motion: every element enters and exits with simple animation (fade, slide, pop, word-by-word build). Static frames read as unfinished.
 - When in doubt, propose the richer option and mark it optional. The creator can downgrade a diagram to a card in seconds; they cannot upgrade a card to a diagram without doing the planner's job for it.
 
-The opposite failure is real too, and the density targets below are ceilings as well as floors. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up; even the most-watched hyper-edited channels publicly slowed their editing in 2024 because hyper-stimulus was hurting watch time. Space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks.
+The opposite failure is real too, and the density targets below are ceilings as well as floors. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up. Space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks.
 
 ## Density tiers
 
@@ -26,7 +26,7 @@ The graphics-frequency tier comes from `[style]` in the studio config, with per-
 | medium | ~20-45 s | 1.5-3 | Polished educational channel; every key point visualized, breathing room between | B-roll, lower thirds, list builds, stat cards, screenshots; bare talking head fine for 15-20 s stretches |
 | low | ~45-90 s | 0.7-1.3 | Minimal, authoritative; graphics only where they genuinely clarify | Chapter cards plus the occasional stat, diagram, or screenshot at the most important moments only |
 
-Benchmarks behind the tiers: high-energy content changes something visually every 5-7 seconds; top creators average roughly 19 shot changes in the first 30 seconds with bare talking head under ~20% of those shots; high-production channels introduce a new stimulus every 20-30 seconds; minimal-touch guidance for long talking segments is one well-placed graphic every 30-60 seconds.
+Pacing reference points, not tier budgets: fast-paced editing changes something visually every 5-7 seconds, with roughly 19 shot changes in the first 30 seconds and bare talking head under 20% of those shots; a new visual stimulus every 20-30 seconds reads as high production; through long talking stretches, one well-placed graphic every 30-60 seconds is the sparsest pacing that still holds attention.
 
 ## Pacing curve (apply at every tier, front-loaded)
 
@@ -97,13 +97,3 @@ Priority when triggers collide or the budget is tight: chapter changes > process
 - Readable on a phone: big, high-contrast text; roughly 8 words maximum per text element.
 - Sound cues: a subtle whoosh or pop on important beats signals attention, but not on every element.
 - Match the register of the content: no memes in a corporate explainer, no neon gaming pops in a finance channel. When style is unknown, default to clean and neutral and flag tone-dependent beats as swappable.
-
-## Sources
-
-- AIR Media-Tech, Advanced retention editing: cutting patterns that keep viewers past minute 8. https://air.io/en/youtube-hacks/advanced-retention-editing-cutting-patterns-that-keep-viewers-past-minute-8
-- Edicion Video Pro, Audience Retention: How to Edit Videos That Keep Viewers Hooked. https://edicionvideopro.com/en/video-workflow-tutorials/audience-retention-how-to-edit-videos-that-keep-viewers-hooked/
-- Huber et al. (Adobe Research, CHI 2019), B-Script: Transcript-based B-roll Video Editing with Recommendations. https://arxiv.org/abs/1902.11216
-- Uppbeat, How to Increase Audience Retention on YouTube. https://uppbeat.io/blog/youtube-growth/youtube-analytics/youtube-audience-retention
-- Washington Post (2024), MrBeast calls for slowing down video editing styles. https://www.washingtonpost.com/technology/2024/03/30/video-editing-mrbeast-retention/
-- Increditors, Guide to Hormozi, Abdaal, and MrBeast editing styles. https://increditors.com/an-ultimate-guide-to-alex-hormozi-ali-abdaal-and-mr-beast-video-editing-style-and-methods/
-- FilterGrade, How to Edit Livestreams for YouTube Highlight Videos. https://filtergrade.com/how-to-edit-livestreams-youtube-highlight/

@@ -1,12 +1,12 @@
 # CTA Placement Reference
 
-Research-backed rules (2024-2026 era) for deciding when, where, and how to place CTA beats in a video, using the transcript and position-based retention logic. mc-beats reads this during its CTA placement pass; mc-package reads it for description lines, the pinned-comment suggestion, and end-screen guidance. Brand-agnostic; the creator's actual inventory comes from `[cta]` in the studio config and the Production Bible's CTA section.
+Rules for deciding when, where, and how to place CTA beats in a video, using the transcript and position-based retention logic. mc-beats reads this during its CTA placement pass; mc-package reads it for description lines, the pinned-comment suggestion, and end-screen guidance. Brand-agnostic; the creator's actual inventory comes from `[cta]` in the studio config and the Production Bible's CTA section.
 
 ## Core principles
 
 1. Earn before asking. CTAs convert best immediately after a moment of delivered value: a payoff, insight, demo result, or completed segment. Asking before value is delivered depresses both conversion and retention.
 2. One primary CTA per video. Multiple CTAs are fine only when spaced apart, serving different purposes, with a clear hierarchy. Competing asks in the same window create choice paralysis and read as noise.
-3. Verbal plus on-screen beats either alone, and beats no ask at all: creator tests put the subscribe-conversion lift of a clear, non-pushy verbal ask at a few percent up to 30-40% relative. When the transcript contains a verbal CTA, always pair it with a graphic synced to start within about half a second of the spoken words. A silent graphic is acceptable only for low-friction asks (subscribe bug, link-in-description lower third).
+3. Verbal plus on-screen beats either alone, and beats no ask at all: a clear, non-pushy verbal ask lifts subscribe conversion by a few percent up to 30-40% relative. When the transcript contains a verbal CTA, always pair it with a graphic synced to start within about half a second of the spoken words. A silent graphic is acceptable only for low-friction asks (subscribe bug, link-in-description lower third).
 4. Continue the journey, do not interrupt it. Retention graphs commonly dip at CTA moments; the dips come from jarring, disconnected asks, not from CTAs per se. A CTA framed as the natural next step holds retention; a hard sales pivot does not.
 
 ## Placement zones by video position
@@ -78,11 +78,11 @@ When the source is an edited livestream VOD:
 4. Always add an end-screen runway. Raw stream endings have none; hold or extend the final shot to create the 10-20 second zone and point at a related VOD or highlight video.
 5. Clip-to-full-video CTAs: any short or clip cut from the VOD ends with an on-screen CTA pointing to the full video. This is the highest-leverage CTA in a clipping pipeline.
 
-## Confidence notes
+## Overrides and trade-offs
 
-The zone percentages, the 2-minute spacing rule, and the 3-CTA cap are practitioner consensus rather than controlled data: treat them as sane defaults, and let per-channel retention data override them when available. Everything about end screens (the 5-20 s window, simple layouts beating cluttered ones), the verbal-plus-visual pairing, and the no-CTA opening is well supported.
+The zone percentages, the 2-minute spacing rule, and the 3-CTA cap are defaults; per-channel retention data overrides them wherever the creator has it.
 
-Known trade-off: even well-executed CTAs produce small retention dips. A small dip at a well-placed ask is an acceptable cost for conversion; a large dip means the ask was jarring, mistimed, or too long.
+Even well-executed CTAs produce small retention dips. A small dip at a well-placed ask is an acceptable cost for conversion; a large dip means the ask was jarring, mistimed, or too long.
 
 ## Config schema
 
@@ -109,14 +109,3 @@ priority = 1
 4. Fill CTA beats from the configured inventory by priority: sync graphics to kept verbal CTAs first, then place silent-eligible low-friction CTAs at the best remaining seams; enforce spacing, caps, and one ask per window.
 5. Reserve and validate the end-screen runway: the final shot must tolerate overlays, and the narration should verbally bridge to the watch-next target (flag it when it does not).
 6. Emit CTA rows in the beat table with timestamps, anchors, transcript evidence, and rationale, for gate-3 approval like any other beat.
-
-## Sources
-
-- vidIQ, What Is a YouTube CTA? Definition, Examples, and How to Write One. https://vidiq.com/blog/post/youtube-cta/
-- Ventress, YouTube CTA Strategy 2025: Convert Viewers to Subscribers. https://ventress.app/blog/youtube-call-to-action-strategy-convert-viewers-subscribers/
-- Mark Brinker, The Real Reason YouTubers Obsess Over Likes and Subscribes (TubeBuddy ask-vs-no-ask experiment). https://www.markbrinker.com/youtube-engagement
-- TubeAnalytics, YouTube Cards and End Screens Checklist. https://www.tubeanalytics.net/blog/youtube-cards-end-screens-checklist-for-retention
-- Humble & Brag, YouTube End Screens: How to Set Them Up and Optimise Them. https://humbleandbrag.com/blog/youtube-end-screens
-- OverseerOS, YouTube Retention Curve Audit. https://www.overseeros.com/blog/youtube-retention-curve-audit
-- Viral Idea Marketing, YouTube Video Editing for Livestream Replays. https://www.viralideamarketing.com/post/youtube-video-editing-for-livestream-replays-how-to-cut-and-repurpose-content
-- Restream, 9 Ways to Repurpose Your Live Video Content. https://restream.io/blog/repurpose-live-videos/
