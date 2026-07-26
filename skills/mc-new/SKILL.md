@@ -7,6 +7,12 @@ description: Scaffold a video project from a format profile. Use when the user s
 
 Scaffold the project every later stage runs against: `{projects-path}/<slug>/` holding `project.json` and `brief.md`. `project.json` is the contract every downstream skill reads without this conversation in the room, so the stage list, the mode, and the entry point have to be right at creation. `brief.md` carries the creator's own words and the links back to where the idea came from; nothing later recovers them.
 
+## Resolution rules
+
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/scripts/new_project.py`).
+- `{project-root}` → the project working directory.
+
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.

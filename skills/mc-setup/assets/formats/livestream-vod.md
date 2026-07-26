@@ -33,7 +33,7 @@ Post-production of a recorded livestream (or any long single-take source) into a
 
 ## Templates
 
-- None yet. A recurring show should promote its packaging spec (locked thumbnail anchors vs per-episode variables) into the brand `templates/` folder so mc-package can generate against it.
+- None yet. A recurring show should promote its packaging spec (locked thumbnail anchors vs per-episode variables) into the `{brand-path}/templates/` folder so mc-package can generate against it.
 
 ## Learnings
 

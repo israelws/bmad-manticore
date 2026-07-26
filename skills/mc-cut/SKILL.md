@@ -17,7 +17,8 @@ Everything else in this stage follows from that, and from one convention: a chec
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/rendering.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/rendering.md`).
 - `{project-root}` → the project working directory.
 
 ## On Activation
@@ -36,13 +37,13 @@ uv run {skill-root}/scripts/preflight.py raw/<take> [...] --remux --qc-frames cu
 
 It is slow, so run it in the background and let transcription wait on it. Record the reported `cfr_master` in `project.json` `sources`; every later step reads that path, never the VFR original, because the two have different frame timing and the desync only shows up once the creator scrubs the timeline.
 
-Exit 3 is source QC failing, and it is a hard stop: do not transcribe, cut, or render against it. A false `disk.ok` is also a stop. For either, and for the spatial fix, load `references/source-prep.md`.
+Exit 3 is source QC failing, and it is a hard stop: do not transcribe, cut, or render against it. A false `disk.ok` is also a stop. For either, and for the spatial fix, load `{skill-root}/references/source-prep.md`.
 
 ## Transcribe and verify
 
 Needs the CFR master from the previous section.
 
-Pick the lane from `references/transcription.md` (published sources take captions, not local ASR), then build the audio map and prove the transcript:
+Pick the lane from `{skill-root}/references/transcription.md` (published sources take captions, not local ASR), then build the audio map and prove the transcript:
 
 ```
 uv run {skill-root}/scripts/analyze_audio.py raw/<take> -o cut/audio-map.json --noise {workflow.silence_floor_db}
@@ -51,7 +52,7 @@ uv run {skill-root}/scripts/verify_transcript.py transcript/words.json --audio-m
 
 The audio map is the timing source of truth for the whole stage, built once per source.
 
-A non-zero exit from `verify_transcript.py` is a HARD STOP: it finds audio above the silence floor that produced no words and names the regions. Nothing may be built on a transcript that has not passed, because downstream a hole in the transcript looks exactly like dead air and the cut deletes real content. `references/transcription.md` carries the override for a region the creator has listened to and confirmed.
+A non-zero exit from `verify_transcript.py` is a HARD STOP: it finds audio above the silence floor that produced no words and names the regions. Nothing may be built on a transcript that has not passed, because downstream a hole in the transcript looks exactly like dead air and the cut deletes real content. `{skill-root}/references/transcription.md` carries the override for a region the creator has listened to and confirmed.
 
 Every lane windows in 20s isolated windows with 3s overlap. This is not a tuning knob, and never raise `--window` to go faster: parakeet drops whole paragraphs inside long windows with no error at all. Measured on the take that exposed it, 120s chunks lost three paragraphs, 90s still lost content, 20s was complete. That silent drop corrupted a real project on 2026-07-24.
 
@@ -79,7 +80,7 @@ Then reconstruct what the viewer will actually hear, and read it as an argument:
 uv run {skill-root}/scripts/edited_transcript.py transcript/words.json --edl cut/edl.json -o cut/edited-transcript.md -j cut/edited-words.json
 ```
 
-Both clean and source timecodes come from here; never convert between them by hand. Run the editorial pass on that transcript per `references/editorial-pass.md`, writing `cut/editorial-review.md` from `assets/editorial-review-template.md`. Nothing it recommends is auto-applied. RE-RECORD items are the one exception to "the cut applies the calls": there is no pickup re-entry path, so they hand over as a shoot list and the cut proceeds without them.
+Both clean and source timecodes come from here; never convert between them by hand. Run the editorial pass on that transcript per `{skill-root}/references/editorial-pass.md`, writing `cut/editorial-review.md` from `{skill-root}/assets/editorial-review-template.md`. Nothing it recommends is auto-applied. RE-RECORD items are the one exception to "the cut applies the calls": there is no pickup re-entry path, so they hand over as a shoot list and the cut proceeds without them.
 
 Write `cut/cutplan.md` carrying both tiers, each call with its timestamp and the quoted words. Routine silence trims group into one line. Always itemize section re-reads, bloopers and every content-tier recommendation, whatever their size. Set `approvals.cutplan = "pending"`, present it, and STOP for gate 2.
 
@@ -95,7 +96,7 @@ Back up the prior EDL to `cut/edl.pre-editorial.json`, rewrite `cut/edl.json` fr
 
 ## Deliver
 
-After approval, and again after every later re-approval that changes the cut: render the preview, export the timeline, and regenerate every other derived artifact together. `references/rendering.md` carries the commands, the config wiring and the staleness check. Inspect the boundary frames for what they can see, black frames and straddles, up to 3 retries per cut. They see less than they appear to: on the corrupted project every frame looked clean while the cut underneath was built on the hole.
+After approval, and again after every later re-approval that changes the cut: render the preview, export the timeline, and regenerate every other derived artifact together. `{skill-root}/references/rendering.md` carries the commands, the config wiring and the staleness check. Inspect the boundary frames for what they can see, black frames and straddles, up to 3 retries per cut. They see less than they appear to: on the corrupted project every frame looked clean while the cut underneath was built on the hole.
 
 Chapters or log notes written against source timecode remap onto the edited timeline with `uv run {skill-root}/scripts/remap_timecode.py cut/edl.json --direction orig-to-clean --chapters <file> -o <out>`, and `--direction clean-to-orig` maps back.
 
@@ -105,9 +106,9 @@ Record the ISO date in `approvals.cutplan`, append `cut` to `stages_done`, and s
 
 Two entry points run after the `cut` stage has closed. Both touch no gates, approvals or stage fields.
 
-Composited preview: mc-pipeline routes here once mc-graphics writes `graphics/HANDOFF.md`, and again whenever an overlay is re-rendered. Re-render the preview composited per `references/rendering.md`, report any `overlays_missing`, present it, and stop.
+Composited preview: mc-pipeline routes here once mc-graphics writes `graphics/HANDOFF.md`, and again whenever an overlay is re-rendered. Re-render the preview composited per `{skill-root}/references/rendering.md`, report any `overlays_missing`, present it, and stop.
 
-Final render: when the project reaches the final stage, offer the final-quality render per `references/rendering.md`. Finishing in the creator's own editor from the exported timeline is an equally supported path; either closes gate 4.
+Final render: when the project reaches the final stage, offer the final-quality render per `{skill-root}/references/rendering.md`. Finishing in the creator's own editor from the exported timeline is an equally supported path; either closes gate 4.
 
 ## Cutting rules (non-negotiable)
 

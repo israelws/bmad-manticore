@@ -73,7 +73,7 @@ Always exported, per `[editor] timeline-format`.
 | `xmeml`, `edl` | Not yet implemented | Premiere users work from cutplan.md, edl.json and the rendered preview. See TODO.md |
 | `none` | Skipped | Descript and manual workflows. The deliverables are cutplan.md, edl.json and renders/preview.mp4 as the cut map |
 
-`scripts/resolve_import.py` is a stub. Do not offer it. It is named here only
+`{skill-root}/scripts/resolve_import.py` is a stub. Do not offer it. It is named here only
 because the file exists and reads as usable; when its STATUS line says
 implemented, offer it only where `[mcp] davinci-resolve` is true.
 

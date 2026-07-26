@@ -13,13 +13,14 @@ Idempotent throughout: on re-run, existing values are the defaults offered, only
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/bootstrap.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/bootstrap.md`).
 - `{project-root}` → the project working directory.
 - `{brand-path}`, `{formats-path}`, `{projects-path}`, `{engines-path}` → the `[paths]` values from the studio config, resolved against `{project-root}`.
 
 ## On Activation
 
-1. Check four paths: `{project-root}/_bmad/config.toml`, `{project-root}/_bmad/scripts/resolve_config.py`, `{project-root}/_bmad/scripts/resolve_customization.py`, `{project-root}/_bmad/custom/`. Any missing means the project is not BMad-initialized; load `references/bootstrap.md` and finish it before continuing.
+1. Check four paths: `{project-root}/_bmad/config.toml`, `{project-root}/_bmad/scripts/resolve_config.py`, `{project-root}/_bmad/scripts/resolve_customization.py`, `{project-root}/_bmad/custom/`. Any missing means the project is not BMad-initialized; load `{skill-root}/references/bootstrap.md` and finish it before continuing.
 2. Resolve the current state: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`.
 3. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context. Its `[defaults]` are the seed values for the whole interview and the authority on every default.
 
@@ -28,7 +29,7 @@ Then route on the resolved config:
 | State | What to do |
 |---|---|
 | Empty | First run. Work through everything below. |
-| Present, missing any of `[render]`, `[style]`, `[cta]`, `[live]`, `[audio]` | A 0.x studio. Load `references/migration-0x.md`. |
+| Present, missing any of `[render]`, `[style]`, `[cta]`, `[live]`, `[audio]` | A 0.x studio. Load `{skill-root}/references/migration-0x.md`. |
 | Present and complete | An update pass. Say so and offer the sections below as a menu; do not walk them all. |
 
 ## Dependencies and platform
@@ -39,7 +40,7 @@ Bootstrap uv first: check `uv --version`, and if it is missing offer the officia
 uv run {skill-root}/scripts/check_deps.py
 ```
 
-Report what is missing with the exact install command for the platform, and install nothing without the creator confirming each item. The report ends with a platform verdict naming a stack file (`references/stack-macos.md`, `stack-windows.md`, or `stack-linux.md`). Read the named file now and hold it for the rest of setup: it carries the transcription lane, torch index, encoder ladder, SVG rasterizer, and fonts approach this machine actually needs.
+Report what is missing with the exact install command for the platform, and install nothing without the creator confirming each item. The report ends with a platform verdict naming a stack file (`{skill-root}/references/stack-macos.md`, `{skill-root}/references/stack-windows.md`, or `{skill-root}/references/stack-linux.md`). Read the named file now and hold it for the rest of setup: it carries the transcription lane, torch index, encoder ladder, SVG rasterizer, and fonts approach this machine actually needs.
 
 If this machine is not Apple Silicon, say so plainly rather than letting the creator discover it at cut time: the parakeet-mlx reference lane will not run here, and the recommended lane is onnx-asr on the same weights, with fillers and word timestamps carrying over. Carry that honesty into the transcription question.
 
@@ -55,7 +56,7 @@ Idempotent, so a re-run refreshes rather than duplicates. `npx hyperframes skill
 
 ## Interview the studio
 
-Walk the `[defaults]` tables from `customize.toml`, offering current values as defaults. That file is the authority on the schema and every value in it; do not re-derive the question list here. What follows is only what reading the schema will not tell you.
+Walk the `[defaults]` tables from `{skill-root}/customize.toml`, offering current values as defaults. That file is the authority on the schema and every value in it; do not re-derive the question list here. What follows is only what reading the schema will not tell you.
 
 **Traps in the basics.**
 
@@ -67,20 +68,20 @@ Walk the `[defaults]` tables from `customize.toml`, offering current values as d
 
 On a non-Mac machine, confirm the stack file's expectations here too: the encoder ladder the final render will probe, and on Windows with NVIDIA that the torch cu126 index adds roughly 2.5 to 3 GB.
 
-**Video style.** `assets/production-bible-spec.md` is the build spec; follow it rather than inventing a question order. Two things it does not carry: ask about creators to emulate first and, with permission, study the links they give rather than asking anyone to describe a style in the abstract; and echo the distilled takeaways back in your own words for confirmation before they land, since they then seed every remaining question as a proposed default. Style answers go in BOTH places, the config keys for mechanical consumption and the bible for taste, and neither is a copy of the other.
+**Video style.** `{skill-root}/assets/production-bible-spec.md` is the build spec; follow it rather than inventing a question order. Two things it does not carry: ask about creators to emulate first and, with permission, study the links they give rather than asking anyone to describe a style in the abstract; and echo the distilled takeaways back in your own words for confirmation before they land, since they then seed every remaining question as a proposed default. Style answers go in BOTH places, the config keys for mechanical consumption and the bible for taste, and neither is a copy of the other.
 
-**Audio lanes.** Confirm the local-first `[audio]` defaults; the ladder itself lives in mc-audio's `references/audio-lanes.md`. Be straight about three things the defaults do not admit: local TTS is stock voices with no cloning, so narration in the creator's own voice still means recording it; `song-provider` ships empty because no local lane is validated, so never promise the planned ACE-Step lane; and the engine workspace costs a multi-GB venv plus roughly 5 GB of model cache on first use. Offer to build it now with mc-audio's `ensure_workspace.py` or defer. An existing lab is reused, never rebuilt.
+**Audio lanes.** Confirm the local-first `[audio]` defaults; the ladder itself is mc-audio's knowledge, loaded when that skill runs. Be straight about three things the defaults do not admit: local TTS is stock voices with no cloning, so narration in the creator's own voice still means recording it; `song-provider` ships empty because no local lane is validated, so never promise the planned ACE-Step lane; and the engine workspace costs a multi-GB venv plus roughly 5 GB of model cache on first use. Offer to build it now with mc-audio's `ensure_workspace.py` or defer. An existing lab is reused, never rebuilt.
 
 ## Build the brand
 
-Create the four path folders if missing, then fill `{brand-path}` from `assets/`: `tokens.json` from the template, `blacklist.md` from the starter, and `production-bible.md` and `voice-bible.md` per their specs, which are the build instructions whether or not either gets built today. Copy into `{formats-path}` every profile from `assets/formats/` that is not already there, never overwriting, because the creator's copies accumulate learnings.
+Create the four path folders if missing, then fill `{brand-path}` from `{skill-root}/assets/`: `tokens.json` from the template, `blacklist.md` from the starter, and `production-bible.md` and `voice-bible.md` per their specs, which are the build instructions whether or not either gets built today. Copy into `{formats-path}` every profile from `{skill-root}/assets/formats/` that is not already there, never overwriting, because the creator's copies accumulate learnings.
 
 Four things govern that work:
 
 - Ask before interviewing: "point me at anything that already defines your brand or voice, a website, CSS, design tokens, style guides, past videos." Mine those, then interview only what mining could not answer.
 - The exit state is filled, never placeholders. A placeholder survives only when the creator genuinely has nothing to give, and every survivor goes on the pending list loudly.
 - Offer to build the voice bible now rather than leaving the spec sitting there. It needs the creator's own corpus, and it yields a measured wpm that replaces the estimate in `[owner] wpm`.
-- `headshots/` takes 3 to 6 approved photos across varied expressions (neutral, surprised, thinking, excited), renamed to expression slugs with an `index.md` catalog. Say the rule while collecting, because it governs what the creator hands over: approved photos only, never arbitrary frames from footage. A thumbnail sends the original photo to the image model, and every revision re-sends that same original rather than a prior generation. No headshots blocks thumbnails; flag it loudly.
+- `{brand-path}/headshots/` takes 3 to 6 approved photos across varied expressions (neutral, surprised, thinking, excited), renamed to expression slugs with an `index.md` catalog. Say the rule while collecting, because it governs what the creator hands over: approved photos only, never arbitrary frames from footage. A thumbnail sends the original photo to the image model, and every revision re-sends that same original rather than a prior generation. No headshots blocks thumbnails; flag it loudly.
 
 ## Register the creator's tools
 
@@ -110,7 +111,7 @@ Write the results as `[modules.manticore]` and its sub-tables into `{project-roo
 Close with the runnability report, which is the actual deliverable of this stage:
 
 - Locked behavior: what will happen on the first project with these settings. Render-first preview and offered final, the graphics-frequency tier, the CTA inventory, the transcription lane and whether THIS machine can run it, the audio lanes and whether the workspace is built, the timeline format, and whether the HyperFrames skills are installed or deferred.
-- Lane status: implemented or planned for every configured lane, straight from the `customize.toml` comments.
+- Lane status: implemented or planned for every configured lane, straight from the `{skill-root}/customize.toml` comments.
 - Pending gaps, flagged loudly: missing headshots (thumbnails blocked), unbuilt voice bible, placeholder bible sections, unverified tools, empty asset lanes.
 - Whether the harness has browser automation. Packaging research degrades without it, and the report says so when it is absent.
 
@@ -121,5 +122,5 @@ Point at mc-new to start the first project, and at the pending list as the highe
 - Confirm before every install, every MCP add, every command that changes the system.
 - Presence checks only for secrets; never read, echo, or store key values. Keys never go in the TOML, in chat, or in `.env.example`.
 - Paid and metered vendors are opt-in only: no vendor key name, dashboard, or pricing mention outside the branch where the creator explicitly chose that lane.
-- Never claim a planned lane works. `customize.toml` marks each transcription, editor and audio lane implemented or planned; relay that status honestly everywhere it comes up.
+- Never claim a planned lane works. `{skill-root}/customize.toml` marks each transcription, editor and audio lane implemented or planned; relay that status honestly everywhere it comes up.
 - Never touch `{project-root}/_bmad/config.toml`, which is installer-owned. Manticore's home is the `custom/` layer.

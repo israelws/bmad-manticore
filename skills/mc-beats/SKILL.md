@@ -9,7 +9,7 @@ Act as the creator's graphics planner. The outcome is an approved beat table: `b
 
 The table is the engine-neutral contract between the script and the graphics engines, and no graphics code exists until the creator approves it at gate 3. Three consumers set the bar. The creator must be able to picture every beat from its storyboard paragraph alone. mc-assets farms from the `asset` column. mc-graphics renders from `type`, `engine`, and `composition` with nobody in the room to ask what was meant.
 
-Read `references/density-and-creativity.md` (overlay taxonomy, transcript triggers, density tiers, pacing curve) and `references/cta-placement.md` (zones, caps, spacing) in full before planning any beats.
+Read `{skill-root}/references/density-and-creativity.md` (overlay taxonomy, transcript triggers, density tiers, pacing curve) and `{skill-root}/references/cta-placement.md` (zones, caps, spacing) in full before planning any beats.
 
 ## The rule that is not inferable
 
@@ -17,7 +17,8 @@ NEVER ESTIMATE A BEAT TIME. Every `start` is DERIVED: take the anchor word's tim
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/cta-placement.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/cta-placement.md`).
 - `{project-root}` → the project working directory.
 
 ## On Activation
@@ -33,7 +34,7 @@ Pitch your strongest ideas before writing any table, and ask what the creator al
 
 ## Build the table
 
-Walk the EDITED timeline (times derive from `cut/edl.json`, not the raw take). Scan the transcript with the trigger heuristics in `references/density-and-creativity.md`, and for every moment that earns a graphic add a row.
+Walk the EDITED timeline (times derive from `cut/edl.json`, not the raw take). Scan the transcript with the trigger heuristics in `{skill-root}/references/density-and-creativity.md`, and for every moment that earns a graphic add a row.
 
 Propose the most visually ambitious composition the Production Bible allows before settling for less: the creator can downgrade a diagram to a card in seconds, but cannot upgrade a card to a diagram without doing the planner's job for it. Escalate the treatment to the content, so a number gets a stat treatment, a process gets a staged diagram, and a comparison gets a split or table build.
 
@@ -47,7 +48,7 @@ Across the plan as a whole, hold the reference's quotas. Nothing scripted checks
 
 ## The CTA pass
 
-Read `[cta]` (inventory and appetite) from the studio config, scan the transcript for verbal CTAs and payoff seams, and plan `cta` beats within the zones, caps, and spacing in `references/cta-placement.md`. CTA rows join the same table with timestamps, anchors, and rationale, approved at gate 3 like any other beat. No overlay beats in the final 20 seconds unless they ARE the end card. When the inventory includes a next-video or end-card item, optionally add an end-card beat themed from `{brand-path}/tokens.json`.
+Read `[cta]` (inventory and appetite) from the studio config, scan the transcript for verbal CTAs and payoff seams, and plan `cta` beats within the zones, caps, and spacing in `{skill-root}/references/cta-placement.md`. CTA rows join the same table with timestamps, anchors, and rationale, approved at gate 3 like any other beat. No overlay beats in the final 20 seconds unless they ARE the end card. When the inventory includes a next-video or end-card item, optionally add an end-card beat themed from `{brand-path}/tokens.json`.
 
 ## Beat table format
 

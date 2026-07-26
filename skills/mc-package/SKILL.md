@@ -15,7 +15,8 @@ invented fresh here.
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/cta-placement.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/cta-placement.md`).
 - `{project-root}` → the project working directory.
 
 ## On Activation
@@ -24,7 +25,7 @@ invented fresh here.
 2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context. The `[packaging]` keys come from the same resolution.
 3. Read `project.json` and find the promise. When `stages` includes `outline`, `approvals.outline` must be an ISO date; null or `"pending"` stops the run and routes the creator back to the outline gate. Then read `outline.md` (the packaging promise) and `script.md`. When `stages` has no outline stage (footage-first and livestream projects), the promise comes from the footage: derive it from the final transcript and package only what the video actually delivers.
 4. Read the final transcript if the cut exists, the format profile at `{formats-path}/<format>.md`, `{brand-path}/tokens.json`, `{brand-path}/production-bible.md` (thumbnail style, the series templates it records, and the CTA section), `{brand-path}/headshots/` with its `index.md`, and from the studio config `[cta]` (inventory and appetite) and `[owner]` `links`.
-5. Route the branches. Format `livestream-pack` (or `stages` containing `stream-pack`) is a scheduled broadcast: work from `references/live-event.md` instead of the sections below. A non-null `series` binds every candidate to that series' locked anchors: load `references/series-template.md`. Read `references/cta-placement.md` in full before writing the description, the pinned comment, or the end-screen guidance.
+5. Route the branches. Format `livestream-pack` (or `stages` containing `stream-pack`) is a scheduled broadcast: work from `{skill-root}/references/live-event.md` instead of the sections below. A non-null `series` binds every candidate to that series' locked anchors: load `{skill-root}/references/series-template.md`. Read `{skill-root}/references/cta-placement.md` in full before writing the description, the pinned comment, or the end-screen guidance.
 
 ## Titles
 
@@ -38,11 +39,11 @@ Face-plus-hook is the default treatment: an approved headshot plus a 2 to 4 word
 `{packaging.hook-words-max}` words. The flow is locked.
 
 - Headshots come ONLY from `{brand-path}/headshots/`, picking the expression from `index.md` that
-  matches the hook's emotion. When `headshots/` is missing or empty, flag it loudly: face-plus-hook
+  matches the hook's emotion. When `{brand-path}/headshots/` is missing or empty, flag it loudly: face-plus-hook
   is blocked and mc-setup's headshot collection step is the fix. A non-face treatment proceeds only
   on the creator's explicit say-so.
 - Draft programmatically: author each draft as a self-contained SVG or HTML composition themed from
-  `tokens.json`, with the chosen headshot placed in the layout, render it, and land it in
+  `{brand-path}/tokens.json`, with the chosen headshot placed in the layout, render it, and land it in
   `packaging/work/`. The draft exists so the text is pixel-accurate; never ask a generative model to
   render the hook text.
 - Improvement pass, ALWAYS: run every draft through the creator's configured image lane (`[assets]`

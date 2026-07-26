@@ -20,7 +20,7 @@ Talking head plus screen recording. The teaching happens on screen; the pipeline
 
 - Real UI only. Generated b-roll is BANNED in this format (UI accuracy rule); that is why the assets stage is absent from the stage list.
 - Beat types extend talking-head with: zoom/pan on the screen recording, UI callouts (boxes, arrows, key-press chips), and step counters.
-- Callouts use the brand accent color on a subtle border stroke (per tokens.json); never obscure the UI element being discussed, point at it.
+- Callouts use the brand accent color on a subtle border stroke (per `{brand-path}/tokens.json`); never obscure the UI element being discussed, point at it.
 - Screen recordings are captured at native resolution, constant frame rate, and cursor visible.
 - Creativity: restrained. The UI is the star; graphics clarify, never decorate. Vary callout placement and pacing, not treatment. (mc-retro tunes this line per format.)
 

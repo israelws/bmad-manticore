@@ -5,13 +5,13 @@ video. The deliverables are one title, one description, and one broadcast thumbn
 a stream that has not happened yet.
 
 Load this instead of the VOD flow when the format is `livestream-pack` or `stages` contains
-`stream-pack`. The Thumbnails, Description, and blessed-slot sections of `SKILL.md` still govern
+`stream-pack`. The Thumbnails, Description, and blessed-slot sections of `{skill-root}/SKILL.md` still govern
 how each asset is made; this file says what changes.
 
 ## What to produce
 
 1. Apply the series template first when the show belongs to a series; recurring shows usually do.
-   See `references/series-template.md`.
+   See `{skill-root}/references/series-template.md`.
 2. One title (locked anchors apply) and one description. This is the live lane, so live framing is
    correct here: chat asks, the schedule, membership mentions, alongside the CTA lines and
    `[owner]` `links` the Description section specifies.
@@ -31,7 +31,7 @@ asset for both jobs, and never let the scene card become the broadcast thumbnail
 ## Finish
 
 Write `packaging/titles.md`, `packaging/description.md`, and the thumbnail per the folder rules in
-`SKILL.md`; update `artifacts` in `project.json`.
+`{skill-root}/SKILL.md`; update `artifacts` in `project.json`.
 
 Touch `stage` and `stages_done` ONLY when `package` is the project's current stage AND appears in
 its `stages` array. livestream-pack has no `package` stage (its stages are `new`, `stream-pack`,

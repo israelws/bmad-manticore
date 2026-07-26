@@ -19,8 +19,8 @@ activation_steps_append = []
 # "file:{project-root}/..." paths whose contents are loaded as facts.
 persistent_facts = []
 
-# Craft QA checklist used by step 4. Relative paths resolve against the
-# skill folder. Override with your own file (absolute or {project-root}/...
-# path) if you have developed your own retention rules; the packaged
-# default is the 16-rule list in assets/craft-checklist.md.
-craft_checklist = "assets/craft-checklist.md"
+# Craft QA checklist used by step 4. Override with your own file (absolute
+# or {project-root}/... path) if you have developed your own retention
+# rules; the packaged default is the 16-rule list in
+# {skill-root}/assets/craft-checklist.md.
+craft_checklist = "{skill-root}/assets/craft-checklist.md"

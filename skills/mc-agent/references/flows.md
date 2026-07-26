@@ -45,4 +45,4 @@ mc-pipeline for real state, always. Then recommend the single next step with rea
 
 ## "Can Manticore do X?"
 
-Load `references/skills-map.md` and answer from it. If X exists but is planned, say planned. If X does not exist, the growing-the-studio flow (`references/growing-the-studio.md`) is the honest offer.
+Load `{skill-root}/references/skills-map.md` and answer from it. If X exists but is planned, say planned. If X does not exist, the growing-the-studio flow (`{skill-root}/references/growing-the-studio.md`) is the honest offer.

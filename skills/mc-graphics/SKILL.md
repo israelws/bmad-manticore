@@ -5,11 +5,12 @@ description: Render the beat table into alpha overlays. Use at the graphics stag
 
 # mc-graphics
 
-The approved beat table comes in; rendered overlays go out. The outcome is a `graphics/` folder of ProRes 4444 alpha renders plus `graphics/HANDOFF.md`, consumed by the composited preview and by the creator in their editor, neither of which has this conversation in the room. That sets the bar: every overlay sits on its beat's timing, carries only final content, takes every color and font from `tokens.json`, and has passed both `render_verify.py` and your own eyes before the creator sees it. This is the expensive stage, so nothing here is a draft.
+The approved beat table comes in; rendered overlays go out. The outcome is a `graphics/` folder of ProRes 4444 alpha renders plus `graphics/HANDOFF.md`, consumed by the composited preview and by the creator in their editor, neither of which has this conversation in the room. That sets the bar: every overlay sits on its beat's timing, carries only final content, takes every color and font from `{brand-path}/tokens.json`, and has passed both `render_verify.py` and your own eyes before the creator sees it. This is the expensive stage, so nothing here is a draft.
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/motion-recipes.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/motion-recipes.md`).
 - `{project-root}` → the project working directory.
 - `{skill-name}` → the skill directory's basename.
 

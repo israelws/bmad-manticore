@@ -1,7 +1,7 @@
 # The series template contract
 
 One file per series at `{brand-path}/templates/<series>.md`, filename matching the `series` value
-in `project.json`. mc-setup's brand scaffold creates the `templates/` folder and one file per
+in `project.json`. mc-setup's brand scaffold creates the `{brand-path}/templates/` folder and one file per
 recurring series the creator names; mc-package is the consumer.
 
 Load this when `series` in `project.json` is set. Its locked anchors bind every title and
@@ -11,7 +11,7 @@ thumbnail candidate produced for the episode.
 
 - Locked anchors: everything each episode repeats so the series reads as a set in a feed.
   Thumbnail layout constants (face position and scale, wordmark or episode badge placement,
-  background treatment, palette accents drawn from `tokens.json`) and the title pattern (fixed
+  background treatment, palette accents drawn from `{brand-path}/tokens.json`) and the title pattern (fixed
   prefix, suffix, or numbering scheme).
 - Per-episode variables: the slots each episode fills. Hook words, episode-specific imagery, guest
   name, episode number.

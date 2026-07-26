@@ -9,11 +9,17 @@ The compounding mechanism: feedback edits FILES, not just memory. Every note lan
 
 Two lanes. Retro routes the creator's notes into the files that would have prevented them. Wrap does post-publish cleanup and asset promotion. Retro runs first and offers wrap after; the creator can also ask for wrap alone on an already-retroed project.
 
+## Resolution rules
+
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it.
+- `{project-root}` → the project working directory.
+
 ## On Activation
 
 1. Studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.
 2. This skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` before the rest of activation and `{workflow.activation_steps_append}` after it; hold `{workflow.persistent_facts}` as standing context.
-3. Establish the target. With a project, read `project.json` (stage `retro`) and take the format from it. On an ad-hoc run with no `project.json`, ask which format profile in `{formats-path}` the notes concern, or which brand file directly (`voice-bible.md`, `blacklist.md`, `production-bible.md`), and route to that. Ad-hoc runs skip only the `project.json` bookkeeping, so ad-hoc feedback still compounds.
+3. Establish the target. With a project, read `project.json` (stage `retro`) and take the format from it. On an ad-hoc run with no `project.json`, ask which format profile in `{formats-path}` the notes concern, or which brand file directly (`{brand-path}/voice-bible.md`, `{brand-path}/blacklist.md`, `{brand-path}/production-bible.md`), and route to that. Ad-hoc runs skip only the `project.json` bookkeeping, so ad-hoc feedback still compounds.
 
 ## Collecting the notes
 

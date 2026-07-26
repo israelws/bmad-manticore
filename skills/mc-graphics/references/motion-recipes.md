@@ -9,7 +9,7 @@ The input stills come from wherever the graphic was authored: `{skill-root}/scri
 - Input PNGs must carry real alpha. A PNG whose alpha channel is all zero or all opaque full-frame produces an invisible or frame-covering overlay; `html_to_png.py` verifies this at export.
 - Every `overlay` filter in these recipes passes `format=auto`. The overlay filter's default working format is `yuv420`, which silently drops alpha; the encoder then re-adds a fully opaque alpha plane and the "overlay" covers the whole frame.
 - The filtergraph ends with `format=yuva444p10le` before `prores_ks`, and the output is always ProRes 4444 (`-c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le`), per this skill's deliverable rule.
-- Parameters come from the project, never from these recipes: canvas size and fps from the format profile, the beat duration and timeline position from the approved beat table, motion durations and easing feel from the `tokens.json` motion values and the Production Bible. Timing is law; a move that wants a longer beat routes back through the creator.
+- Parameters come from the project, never from these recipes: canvas size and fps from the format profile, the beat duration and timeline position from the approved beat table, motion durations and easing feel from the `{brand-path}/tokens.json` motion values and the Production Bible. Timing is law; a move that wants a longer beat routes back through the creator.
 - Easing uses cubic curves in the overlay position expression: ease-out is `1-pow(1-p,3)` and ease-in is `pow(p,3)`, where `p` is the normalized progress `(t-start)/dur` of that move.
 
 ## Recipe 1: fly-in, hold, fly-out

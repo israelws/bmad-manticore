@@ -9,7 +9,8 @@ The anti-LLM-slop stage. The script is woven, not written: everything worth sayi
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `scripts/lint_script.py`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/scripts/lint_script.py`).
 - `{project-root}` is the project working directory; the studio config's `paths` values resolve against it.
 
 ## On Activation

@@ -7,6 +7,12 @@ description: Build a branded livestream asset pack for OBS. Use on the livestrea
 
 Brand tokens in, complete pack out. The `livestream-pack` format profile is the spec; this skill executes it. The outcome is a `graphics/` folder the creator loads into OBS and goes live from without you in the room, which is the bar: every asset verified, and HANDOFF.md saying where each one goes.
 
+## Resolution rules
+
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/scripts/render_verify.py`).
+- `{project-root}` → the project working directory.
+
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.

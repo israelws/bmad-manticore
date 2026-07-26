@@ -27,7 +27,7 @@ Not a video. One run of mc-stream-pack producing a complete OBS asset pack from 
 - Scenes are reactive via the `window.obsstudio` JS API (countdown resets on scene activation, lower thirds re-trigger entrance on visibility) with a plain-browser fallback.
 - Stinger transition: one HyperFrames comp rendered twice (VP9 yuva420p WebM for OBS, ProRes 4444 MOV for the editor lane), 1 to 2 seconds. Baked alpha scene and lower-third deliverables list WebM VP9 alpha (libvpx-vp9 yuva420p) for OBS on any platform alongside the ProRes 4444 MOV; render_verify.py can transcode and verify the WebM from the ProRes master in one step.
 - vMix note: vMix rejects MP4 stingers and prefers PNG sequences; when the live tool is vMix, deliver a PNG sequence or the ProRes 4444 MOV instead of WebM. Wirecast takes the ProRes 4444 MOV directly.
-- Lower thirds and topic cards as self-contained local HTML, styled from tokens.json, drivable by SPX-GC or an OBS browser source for click-to-trigger later.
+- Lower thirds and topic cards as self-contained local HTML, styled from `{brand-path}/tokens.json`, drivable by SPX-GC or an OBS browser source for click-to-trigger later.
 
 ## Verification, not vibes
 

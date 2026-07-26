@@ -7,6 +7,12 @@ description: Draft hooks, the outline, and the packaging promise. Use at the out
 
 Gate 1. The outcome is `outline.md`: three hooks, one outline, and the packaging promise, in a form the creator can approve, edit, or kill before a line of script exists. It is a decision artifact, not a draft script. Everything in it traces to `braindump.md`, because the script stage may only use words already spoken there.
 
+## Resolution rules
+
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/scripts/lint_script.py`).
+- `{project-root}` → the project working directory.
+
 ## On Activation
 
 1. Resolve the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Its `paths` values resolve against `{project-root}`.

@@ -45,5 +45,5 @@ Why this exists: on the first real project the cutter flagged all 19 of the crea
 
 ## Also in the brand folder
 
-- `exemplars/` as above.
-- `headshots/`: 3 to 6 approved reference photos of the creator, the input for face-consistent thumbnail generation. Approved photos only; mc-package never uses arbitrary frames from footage.
+- `{brand-path}/exemplars/` as above.
+- `{brand-path}/headshots/`: 3 to 6 approved reference photos of the creator, the input for face-consistent thumbnail generation. Approved photos only; mc-package never uses arbitrary frames from footage.

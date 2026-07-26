@@ -4,10 +4,11 @@ The master spec for the Manticore pipeline, owned by mc-pipeline (the router). I
 
 This file is a contract, not a summary of the stages. It carries what crosses a stage boundary. Anything a stage produces and consumes entirely within itself belongs to that skill, and adding it here is how this file goes stale.
 
-Two naming notes, because both have caused real confusion:
+Three naming notes, because each has caused real confusion:
 
 - Bracketed table names (`[owner]`, `[paths]`, `[render]`, `[editor]`, and the rest) are sub-tables of `[modules.manticore]`, the studio config. `[defaults.*]` names appear only in mc-setup's `customize.toml`, the seed it copies from; a resolved studio config has no `[defaults]` table.
 - `{projects-path}`, `{brand-path}`, `{formats-path}`, `{engines-path}` are the `[paths]` values resolved against `{project-root}`. If `[modules.manticore]` is empty, run mc-setup first; no stage skill proceeds without it.
+- A bare path in any skill file is the current video project: `{video-path}` = `{projects-path}/<slug>/`. A file inside a skill's own folder always carries `{skill-root}`, so bare `assets/` is the project's farmed-asset folder and `{skill-root}/assets/` is the skill's own. A path led by a skill name (`mc-cut/scripts/preflight.py`) names a file in that skill's folder, and is the form any skill file uses to record which skill owns a script or a document; a skill still reads only its own folder.
 
 ## Stage sequence (master list)
 
@@ -71,7 +72,7 @@ Every mc-* stage skill follows the same shape. No exceptions, no creativity in t
 1. Resolve the studio config (`resolve_config.py --key modules.manticore`) and the skill's own surface (`resolve_customization.py --skill {skill-root}`); if the studio config is empty, stop and run mc-setup.
 2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route). The one exception is a declared ROUTED ENTRY POINT: a section a skill declares for the router to re-enter after its own stage has closed. Those touch no gates, no approvals and no stage fields, so they cannot advance or rewind the project, and a skill that declares none has no exception. mc-cut is the only skill with any today.
 3. Read the format profile at `{formats-path}/<format>.md` and any taste files it names (all under `{brand-path}`).
-4. Do the stage work, calling the scripts in the skill's own `scripts/` folder for anything mechanical.
+4. Do the stage work, calling the stage skill's own scripts for anything mechanical.
 5. Run the stage's checklist (in the skill file). Fix failures before presenting.
 6. Write the artifacts to the paths in the table above. Update `artifacts` in project.json.
 7. If the stage is a gate: set the approval to `"pending"`, present the artifact to the creator, and STOP. Do not proceed, do not start the next stage, do not summarize what the next stage will do.
@@ -137,7 +138,7 @@ Every blocking gate carries an acknowledged override (`preflight.py --allow-qc-d
 | Transcript completeness | `mc-cut/scripts/verify_transcript.py` | candidate detection |
 | Cut integrity | `mc-cut/scripts/verify_edl.py` | rendering, timeline export, gate 2 |
 | Beat anchor placement | `mc-beats/scripts/verify_anchors.py` | gate 3 and graphics |
-| Render output integrity | `render_preview.py` / `render_final.py` | publishing the output file |
+| Render output integrity | `mc-cut/scripts/render_preview.py` / `mc-cut/scripts/render_final.py` | publishing the output file |
 
 ## Spatial normalize
 

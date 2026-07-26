@@ -1,10 +1,10 @@
 # Engine: HTML
 
-The html-design lane: model-authored HTML/CSS, themed from `{brand-path}/tokens.json` and the Production Bible, rendered to pixels by `{skill-root}/scripts/html_to_png.py`, screenshot-reviewed, iterated. The fastest path for static and single-frame graphics (popups, callout cards, framed imagery, infographic frames). Animated comps use the same authoring surface but must honor the `window.seek(frame)` determinism contract in `engines/design-prompting.md` and render frame-stepped to ProRes 4444.
+The html-design lane: model-authored HTML/CSS, themed from `{brand-path}/tokens.json` and the Production Bible, rendered to pixels by `{skill-root}/scripts/html_to_png.py`, screenshot-reviewed, iterated. The fastest path for static and single-frame graphics (popups, callout cards, framed imagery, infographic frames). Animated comps use the same authoring surface but must honor the `window.seek(frame)` determinism contract in `{skill-root}/engines/design-prompting.md` and render frame-stepped to ProRes 4444.
 
 ## The loop
 
-1. Author a single self-contained HTML file in the project's `graphics/` folder: no external requests of any kind (CDN scripts, fonts, images); inline or data-URI everything. Every color and font comes from `tokens.json`; surface treatment, radius, shadow, and placement come from the Production Bible. Exact text is verbatim from the beat row or transcript.
+1. Author a single self-contained HTML file in the project's `graphics/` folder: no external requests of any kind (CDN scripts, fonts, images); inline or data-URI everything. Every color and font comes from `{brand-path}/tokens.json`; surface treatment, radius, shadow, and placement come from the Production Bible. Exact text is verbatim from the beat row or transcript.
 2. Render at the exact target size: `uv run {skill-root}/scripts/html_to_png.py graphics/<id>.html --out graphics/<id>.png --width {W} --height {H} --verify-alpha`. The script fails if the PNG is not exactly the requested pixel size.
 3. Review the rendered PNG itself, not the HTML in your head: open it, zoom, read every string, check alpha over the `_checker.png` composite, critique against the Production Bible's aesthetic language.
 4. When placement matters, render a SEPARATE guides pass with `--guides graphics/<id>_guides.png` (safe-zone insets plus crosshair over a checkerboard). Guides and helper text never appear in the deliverable image.

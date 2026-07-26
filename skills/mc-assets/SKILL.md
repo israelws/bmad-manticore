@@ -9,7 +9,8 @@ Farm every still and clip the approved beat table calls for. The outcome is `ass
 
 ## Resolution rules
 
-- Bare paths and `{skill-root}` (e.g. `references/generative-editing-rules.md`) resolve from this skill's installed directory.
+- Bare paths resolve against `{video-path}`, the current video project at `{projects-path}/<slug>/`. Every bare `assets/` below is that project's folder, never a skill folder.
+- `{skill-root}` → this skill's installed directory; files in it always carry it (`{skill-root}/references/generative-editing-rules.md`).
 - `{project-root}` → the project working directory.
 - `{skill-name}` → the skill directory's basename.
 
@@ -19,7 +20,7 @@ Farm every still and clip the approved beat table calls for. The outcome is `ass
 2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after activation, and hold `{workflow.persistent_facts}` as standing context.
 3. Read `project.json` (stage `assets`), `beats/beats.md`, the format profile, and `{brand-path}/production-bible.md`, whose image-type policy and sourcing hierarchy govern every choice here. The rows to farm are the ones whose `asset` column names an id; a 0.x table with no `asset` column has nothing to farm. If the profile says `generated_broll: banned`, stop and report, because something upstream is wrong.
 
-Before any generative farm or revision, load `references/generative-editing-rules.md`. Its rules on chaining, compositing, self-inspection, people, and prompting bind every lane and every provider.
+Before any generative farm or revision, load `{skill-root}/references/generative-editing-rules.md`. Its rules on chaining, compositing, self-inspection, people, and prompting bind every lane and every provider.
 
 ## Sourcing
 
