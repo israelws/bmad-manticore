@@ -1,86 +1,131 @@
 ---
 name: mc-cut
-description: Turn raw takes into a cut plan, edl.json, a rendered preview, and an editor timeline export. Presents the taste calls for gate 2 approval and renders the preview after every approval; owns the offered final render at gate 4. Use at the cut stage once recordings are in raw/.
+description: Cut raw takes into an approved, rendered edit. Use at the cut stage once recordings are in raw/, or when the user says "cut this", "make the cutplan", "render the preview", or "render the final".
 ---
 
 # mc-cut
 
-The Descript replacement, render-first. Every approved cut iteration ends in a watchable preview render; once the graphics stage has rendered overlays, the preview re-renders with them composited; at gate 4 a final-quality render is offered. The editor timeline export and all assets (cutplan.md, edl.json, overlays) are always produced alongside, so the creator can move into their editor at any step.
+Act as the creator's editor. The outcome is an approved cut: `cut/edl.json`, plus the cutplan, editorial review, preview render and editor timeline built from it.
 
-## Steps
+Three consumers set the bar. The creator at gate 2 must be able to accept or reject every call without re-watching the raw footage. Their editor must import the timeline in sync. mc-beats builds visuals on the edited transcript and the editorial review. This stage owns gate 2 on the cutplan and the offered final render at gate 4.
 
-1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there) and this skill's own surface (`uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`; run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after this step, and hold `{workflow.persistent_facts}` as standing context). Resolve `paths` values against `{project-root}`. Read `project.json` (stage `cut`; the composited preview re-render after graphics and the offered final render at gate 4 are the two routed entry points that legitimately run at later stages, see their sections below), `script.md`, `{brand-path}/production-bible.md` when it exists (the taste contract for the judgment calls in step 4), and the cutting rules below.
-2. Preflight every file in `raw/`: `uv run {skill-root}/scripts/preflight.py raw/<take> [...] --remux --qc-frames cut/qc/`. Four checks, all before any transcription or render:
-   - Frame rate: VFR sources are re-encoded to constant frame rate (run the preflight in the background and keep working; transcription waits for it). Record the reported `cfr_master` path in project.json `sources` as the project source of truth; every later step (transcription, EDL times, renders, timeline export) uses the CFR master, never the VFR original.
-   - Disk: free space is checked against a rough estimate (3x source size plus the estimated CFR masters) before any remux write, and the script refuses the remux itself when the estimate does not fit; if `disk.ok` is false in the summary, stop and tell the creator before any render.
-   - Source QC: the script samples frames across each take and asserts on them, exiting 3 on a flat decorative border ring or an active area whose aspect does not match the container. Exit 3 is a HARD STOP: report the inferred active-content rectangle and get the creator's call. Do not transcribe, do not cut, do not render against a source that failed QC. QC that cannot halt is not QC.
-   - Spatial normalize, when QC halts: `uv run {skill-root}/scripts/normalize_source.py raw/<take> -o raw/<take>-normalized.mp4 --auto [--offset-x N] [--target-aspect 16:9] [--output-size WxH]` crops out the baked-in border and optionally recentres the subject, emitting a corrected master to register in project.json `sources` / `cfr_master`. It must run before beats and graphics, because overlays are positioned against the canvas. A spatial crop moves nothing in time (the script asserts the duration is unchanged and refuses to publish otherwise), so an existing transcript, EDL, cutplan and beat table stay valid: do not re-transcribe and do not re-cut after a normalize. If the creator confirms the framing is intentional, re-run preflight with `--allow-qc-defects` instead. Keep this distinct from creative reframing (punch-ins, motion zooms), which belongs to the beats stage on the already-clean canvas.
-3. Transcribe each take: `uv run {skill-root}/scripts/transcribe.py raw/<take> -o transcript/words.json --provider <[transcription] provider from the config>` (suffix the output `<source-id>.words.json` when the project has multiple sources). Provider values: `auto` (the default) picks parakeet-mlx on macOS Apple Silicon and onnx-asr everywhere else; `parakeet-mlx` and `onnx-asr` force a lane. Both lanes run the same parakeet-tdt-0.6b-v3 weights AND both window identically (20s isolated windows, 3s overlap): short windows are not an optimization detail, they are what keeps parakeet from silently dropping speech, so never raise `--window` to "go faster". On a CUDA machine escalate with `uv run --with "onnx-asr[gpu,hub]" python {skill-root}/scripts/transcribe.py ...` (PEP 508 markers cannot detect GPUs; the `python` command is required because it skips the script's cpu-extra dependency, so onnxruntime-gpu never co-installs with onnxruntime, and the script warns on stderr when an NVIDIA GPU is visible but CUDA is unavailable). All lanes are local and free; the model downloads once on first run.
+## The rule that is not inferable
 
-   Published or already-on-YouTube source (a livestream VOD, a footage-first project, anything with captions): pull the captions with `yt-dlp --write-auto-subs` instead of running local ASR. Free, effectively perfect, any length, and it sidesteps the local-model failure mode entirely. Local ASR is only for RAW, unpublished recordings, which is exactly where the transcription bugs lived and why they went unnoticed for so long. Record the provenance in the transcript header. A metered lane (`--provider elevenlabs-scribe`) stays opt-in behind `[transcription]` for very long files or guaranteed reliability; it sends audio to a third party, so it is never a default.
-3a. Build the audio silence map, once per source: `uv run {skill-root}/scripts/analyze_audio.py raw/<take> -o cut/audio-map.json --noise {workflow.silence_floor_db}`. This is the TIMING source of truth for everything downstream. The transcript is the authority on CONTENT (which words, in what order); the audio is the authority on TIMING (where silence is, and therefore where a cut is safe). Never derive a cut time from transcript timestamps: parakeet absorbs pauses into the preceding word's end, so word gaps read about 0.0 across real dead air.
-3b. Verify the transcript is complete before anything consumes it: `uv run {skill-root}/scripts/verify_transcript.py transcript/words.json --audio-map cut/audio-map.json --wpm <[owner] wpm> -o cut/transcript-check.json`. A non-zero exit is a HARD STOP. It finds audio above the silence floor that produced no words, which is dropped speech, and names the regions. Re-run the take and re-verify. Do not build candidates against a transcript that has not passed. This is the single most important step in the stage: on the first real project the transcriber silently dropped three whole paragraphs, everything downstream ran on the hole, and the cut nearly deleted real content because the gaps looked like dead air.
+The TRANSCRIPT is the authority on CONTENT (which words, in what order). The AUDIO is the authority on TIMING (where silence is, and therefore where a cut is safe). Never derive a cut time, a beat time, or a silence from transcript timestamps: parakeet absorbs pauses into the preceding word's end, so transcript gaps read about 0.0 across real dead air and word ends reach past the sound.
 
-   Not every flagged region is lost speech: a laugh, a music bed, or an off-mic aside reads the same way to a coverage scan. When the creator has listened to a region and confirmed it, sign it off with `--accept-region <start>-<end> --reason "<why>"` (repeatable; the acceptance must fully cover the flagged region and both land in `transcript-check.json`). That is the only way past this gate, and it is a recorded decision, never a silent one.
-4. Candidates: `uv run {skill-root}/scripts/cutplan.py transcript/words.json --audio-map cut/audio-map.json --voice-bible {brand-path}/voice-bible.md -o cut/candidates.json` plus any `{workflow.cutplan_flags}`. It finds dead air to tighten (from the audio, not the transcript), filler runs, stutters, retakes, section re-reads, and bloopers, and snaps every candidate edge into an audio-verified silence so a cut can never land inside a word. Read the summary: `unsnapped` counts candidates whose edges could not reach a silence and still rest on transcript timestamps; check those by ear. The voice bible's `cadence` block decides which connective words are the creator's rhythm and must be KEPT rather than flagged as filler. On an `interview` source (project.json `sources`), it also flags each spoken interviewer-question read as a `marker` candidate: cut the marker and question, keep the answer. The default marker cue is "question from the interviewer"; projects recorded against the older "question from claude" convention pass `--marker-cues "question from claude"` (via `{workflow.cutplan_flags}`).
-5. Make the mechanical taste calls: against `script.md` and the Production Bible, pick best takes, order segments, decide keep-or-cut on every candidate in `cut/candidates.json`.
-6. Write `cut/edl.json`: `{source, source_duration, fade_ms: 30, pad_ms: 60, segments: [...]}` with ordered segments of {source, start, end, beat, quote, reason} obeying the cutting rules below. Then prove it: `uv run {skill-root}/scripts/verify_edl.py cut/edl.json --audio-map cut/audio-map.json --words transcript/words.json -o cut/edl-check.json`. A non-zero exit is a HARD STOP. It fails any boundary that does not rest in an audio-verified silence (naming the miss distance, and whether the boundary is mid-word) and any segment missing its quote or reason. Fix what it names and re-run; do not render, export a timeline, or present a cut that has not passed. Re-run it after every EDL change, including step 7a.
-6a. Reconstruct what the viewer will actually hear: `uv run {skill-root}/scripts/edited_transcript.py transcript/words.json --edl cut/edl.json -o cut/edited-transcript.md -j cut/edited-words.json`. Both timecodes (clean and source) come from here; never convert between them by hand.
-6b. Run the editorial pass on that edited transcript, per `{skill-root}/references/editorial-pass.md`, writing `cut/editorial-review.md` from `{skill-root}/assets/editorial-review-template.md`. This is the content tier: it reads the delivered piece as an argument against `brief.md`, `script.md` and the voice bible, and recommends content-level changes under a subtract-only constraint (cut, re-record, hand-to-beats, or consent-gated generate). Nothing is auto-applied. It runs before gate 2 so the creator settles what stays in one pass, and before beats so no visual work is built on a section that is about to be cut. RE-RECORD items are the exception to "the cut applies the calls": there is no pickup re-entry path in the pipeline yet, so they are handed to the creator as a shoot list and the cut proceeds without them. A pickup shot later is a new source, which means preflight, transcribe and verify from step 2 on a project that is now multi-source.
-7. Write `cut/cutplan.md` as one human-readable plan carrying both tiers: the mechanical judgment calls (each with a timestamp and the quoted words, the "trailing 'so' at 42:20, keep or cut?" shape) and the content calls from the editorial review. Group the routine silence trims into a single line; itemize everything the creator might disagree with, and always itemize section re-reads, bloopers, and every content-tier recommendation. Set `approvals.cutplan = "pending"`, present cutplan.md, and STOP for gate 2.
-7a. When the creator's calls come back, apply them. Write the approved spans to `cut/approved-spans.json` (each `{start, end, quote, reason}`, times re-detected against the audio because transcript-read timecodes drift and a blind apply cuts the wrong spans), then snap them mechanically: `uv run {skill-root}/scripts/snap_spans.py cut/approved-spans.json --audio-map cut/audio-map.json -o cut/snapped-spans.json`. Never snap an edge by hand; an eyeballed snap is how a cut lands inside a word. Anything it reports as `unsnapped` kept its original times and needs an ear before it goes in. Back up the prior EDL to `cut/edl.pre-editorial.json`, rewrite `cut/edl.json` from the snapped spans, re-run `verify_edl.py`, and append the APPLIED section to `cut/editorial-review.md`.
-8. After approval, and again after every later re-approval that changes the cut:
-   - Render the preview, always: `uv run {skill-root}/scripts/render_preview.py cut/edl.json -o renders/preview.mp4 --boundary-frames cut/boundaries/` plus any `{workflow.preview_flags}`. Encoder settings live in the studio config, which is their single home: emit the `[render]` preview keys first (720p CRF 28 when unset), then `{workflow.preview_flags}` last, and never restate a key the config already owns in that string. The flags string is an escape hatch for what the config does not model, such as `--segment-target-seconds`. Inspect the boundary frames per the cutting rules.
-   - Once the graphics stage has rendered overlays into `graphics/`, re-render composited so the creator iterates on overlays and CTAs visually: same command plus `--beats beats/beats.md --graphics-dir graphics/`. Report any `overlays_missing` from the summary.
-   - Regenerate every derived artifact together whenever the EDL changes: the preview, the boundary frames, the timeline export, and cutplan.md. The EDL is the single source of truth and the others drift silently otherwise. The preview writes an `<output>.key` sidecar naming the render identity it was built from; when that key does not match the current EDL's, the derived set is stale.
-   - Export the editor timeline, always, per `[editor] timeline-format` in the config: `fcpxml` via `uv run {skill-root}/scripts/edl_to_fcpxml.py cut/edl.json -o cut/rough.fcpxml` (Resolve and Final Cut import it natively; refuses VFR sources loudly); `xmeml`/`edl` are planned lanes, so Premiere users work from cutplan.md + edl.json + the rendered preview/final until the xmeml lane lands (see TODO); `none` (Descript and manual workflows) skips export, and the deliverables are cutplan.md + edl.json + renders/preview.mp4 as the cut map.
-   - resolve_import.py (push the timeline into a running Resolve) is currently a stub: do NOT offer it. When its STATUS line says implemented, offer it only if `[mcp] davinci-resolve` is true in the config. Free-edition note for when it lands: Resolve's external scripting API is Studio-only, but the free edition runs scripts launched from inside the app (Workspace > Scripts), so copying the script into Resolve's Fusion Scripts folder unlocks scripted import there; the per-OS folder paths are documented in the setup stack reference for the creator's platform.
-   - Record the ISO date in `approvals.cutplan`, append `cut` to `stages_done`, and set `stage` to the next entry in project.json's `stages` array.
+Everything else in this stage follows from that, and from one convention: a check this stage claims to perform is a script that exits non-zero.
 
-## Composited preview (after graphics)
+## Resolution rules
 
-mc-pipeline routes here as soon as the graphics stage completes (mc-graphics hands back after writing `graphics/HANDOFF.md`), and again whenever an overlay in `graphics/` is later re-rendered. This entry point runs after the `cut` stage and touches no gates, approvals, or stage fields: re-render the preview composited, `uv run {skill-root}/scripts/render_preview.py cut/edl.json -o renders/preview.mp4 --boundary-frames cut/boundaries/ --beats beats/beats.md --graphics-dir graphics/` plus any `{workflow.preview_flags}`, report any `overlays_missing` from the summary (each one is a beat whose overlay has not landed in `graphics/`), present the composited preview to the creator, and stop.
+- Bare paths and `{skill-root}` (e.g. `references/rendering.md`) resolve from this skill's installed directory.
+- `{project-root}` → the project working directory.
 
-## Final render (gate 4)
+## On Activation
 
-When the project reaches the final stage, offer the final-quality render from this skill: `uv run {skill-root}/scripts/render_final.py cut/edl.json -o renders/final.mp4 --beats beats/beats.md --graphics-dir graphics/` plus any `{workflow.final_flags}`, with `--codec` and `--crf` per `[render]` in the studio config, `--height` from the height of `[video]` delivery-resolution, `--loudness-target <[render] loudness-target>`, and `--no-loudnorm` appended when `[render] loudnorm` is false. It bakes the same EDL the creator approved with graphics composited from the approved beat table, hardware encode when available (videotoolbox on macOS; on Windows h264_nvenc, then h264_qsv, then h264_amf; on Linux h264_nvenc then h264_vaapi; each candidate validated by a one-frame test encode, libx264 fallback everywhere), persistent incremental segment rendering (the timeline is partitioned into content-addressed segments under `renders/segments/`; a re-render re-encodes only the segments whose inputs actually changed and reuses the rest, so a single tweaked graphic on a long video is a seconds-long re-render), a disk preflight, progress reporting, and boundary-frame checks. `--segment-target-seconds` (default 600) tunes the segment size; append it via `{workflow.final_flags}` when a project wants coarser or finer segments. When `[render] loudnorm` is enabled (the default), the final render is loudness-normalized to the target LUFS with two-pass ffmpeg loudnorm; `--no-loudnorm` turns it off, and the fast preview is never normalized. Finishing in the creator's own editor from the always-exported timeline is an equally supported path; either closes gate 4.
+1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
+2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context.
+3. Read `project.json` (stage `cut`), `script.md`, and `{brand-path}/production-bible.md` when it exists. The Production Bible is the taste contract for the calls you make below.
 
-## Dual timecode
+## Prepare the sources
 
-Chapters or event notes written against original source timecode (a livestream VOD chapter list, log notes) remap onto the edited timeline with `uv run {skill-root}/scripts/remap_timecode.py cut/edl.json --direction orig-to-clean --chapters <file> -o <out>`. The same utility maps clean times back to source timecode (`--direction clean-to-orig`); mc-package carries its own duplicate of it (per the script-duplication convention) for the dual-timeline chapters deliverable whenever an EDL exists.
+Every source in `raw/` passes preflight before anything reads it:
+
+```
+uv run {skill-root}/scripts/preflight.py raw/<take> [...] --remux --qc-frames cut/qc/
+```
+
+It is slow, so run it in the background and let transcription wait on it. Record the reported `cfr_master` in `project.json` `sources`; every later step reads that path, never the VFR original, because the two have different frame timing and the desync only shows up once the creator scrubs the timeline.
+
+Exit 3 is source QC failing, and it is a hard stop: do not transcribe, cut, or render against it. A false `disk.ok` is also a stop. For either, and for the spatial fix, load `references/source-prep.md`.
+
+## Transcribe and verify
+
+Needs the CFR master from the previous section.
+
+Pick the lane from `references/transcription.md` (published sources take captions, not local ASR), then build the audio map and prove the transcript:
+
+```
+uv run {skill-root}/scripts/analyze_audio.py raw/<take> -o cut/audio-map.json --noise {workflow.silence_floor_db}
+uv run {skill-root}/scripts/verify_transcript.py transcript/words.json --audio-map cut/audio-map.json --wpm <[owner] wpm> -o cut/transcript-check.json
+```
+
+The audio map is the timing source of truth for the whole stage, built once per source.
+
+A non-zero exit from `verify_transcript.py` is a HARD STOP: it finds audio above the silence floor that produced no words and names the regions. Nothing may be built on a transcript that has not passed, because downstream a hole in the transcript looks exactly like dead air and the cut deletes real content. `references/transcription.md` carries the override for a region the creator has listened to and confirmed.
+
+Every lane windows in 20s isolated windows with 3s overlap. This is not a tuning knob, and never raise `--window` to go faster: parakeet drops whole paragraphs inside long windows with no error at all. Measured on the take that exposed it, 120s chunks lost three paragraphs, 90s still lost content, 20s was complete. That silent drop corrupted a real project on 2026-07-24.
+
+## Propose the cut
+
+Needs a passing transcript and the audio map. This section ends at gate 2.
+
+```
+uv run {skill-root}/scripts/cutplan.py transcript/words.json --audio-map cut/audio-map.json --voice-bible {brand-path}/voice-bible.md -o cut/candidates.json
+```
+
+Plus `{workflow.cutplan_flags}`. It finds the mechanical candidates and snaps each edge into an audio-verified silence. Two things it does that are easy to undo by accident: the voice bible's `cadence` block marks the connective words that are the creator's rhythm, so those are keeps and not filler; and on an `interview` source each spoken interviewer question becomes a `marker` candidate, where the marker and question go and the answer stays. Anything reported `unsnapped` never reached a silence and needs an ear.
+
+Judge the candidates against `script.md` and the Production Bible, then write `cut/edl.json` as `{source, source_duration, fade_ms: 30, pad_ms: 60, segments: [...]}` with ordered segments of `{source, start, end, beat, quote, reason}`. Prove it:
+
+```
+uv run {skill-root}/scripts/verify_edl.py cut/edl.json --audio-map cut/audio-map.json --words transcript/words.json -o cut/edl-check.json
+```
+
+A non-zero exit is a HARD STOP: it fails any boundary not resting in an audio-verified silence, and any segment missing its quote or reason. Re-run it after every EDL change.
+
+Then reconstruct what the viewer will actually hear, and read it as an argument:
+
+```
+uv run {skill-root}/scripts/edited_transcript.py transcript/words.json --edl cut/edl.json -o cut/edited-transcript.md -j cut/edited-words.json
+```
+
+Both clean and source timecodes come from here; never convert between them by hand. Run the editorial pass on that transcript per `references/editorial-pass.md`, writing `cut/editorial-review.md` from `assets/editorial-review-template.md`. Nothing it recommends is auto-applied. RE-RECORD items are the one exception to "the cut applies the calls": there is no pickup re-entry path, so they hand over as a shoot list and the cut proceeds without them.
+
+Write `cut/cutplan.md` carrying both tiers, each call with its timestamp and the quoted words. Routine silence trims group into one line. Always itemize section re-reads, bloopers and every content-tier recommendation, whatever their size. Set `approvals.cutplan = "pending"`, present it, and STOP for gate 2.
+
+## Apply the approved calls
+
+Write the creator's decisions to `cut/approved-spans.json` as `{start, end, quote, reason}`, with times re-detected against the audio, because transcript-read timecodes drift and a blind apply cuts the wrong spans. Then snap them mechanically. Never snap an edge by hand; an eyeballed snap is how a cut lands inside a word.
+
+```
+uv run {skill-root}/scripts/snap_spans.py cut/approved-spans.json --audio-map cut/audio-map.json -o cut/snapped-spans.json
+```
+
+Back up the prior EDL to `cut/edl.pre-editorial.json`, rewrite `cut/edl.json` from the snapped spans, re-run `verify_edl.py`, and append the APPLIED section to `cut/editorial-review.md`.
+
+## Deliver
+
+After approval, and again after every later re-approval that changes the cut: render the preview, export the timeline, and regenerate every other derived artifact together. `references/rendering.md` carries the commands, the config wiring and the staleness check. Inspect the boundary frames for what they can see, black frames and straddles, up to 3 retries per cut. They see less than they appear to: on the corrupted project every frame looked clean while the cut underneath was built on the hole.
+
+Chapters or log notes written against source timecode remap onto the edited timeline with `uv run {skill-root}/scripts/remap_timecode.py cut/edl.json --direction orig-to-clean --chapters <file> -o <out>`, and `--direction clean-to-orig` maps back.
+
+Record the ISO date in `approvals.cutplan`, append `cut` to `stages_done`, and set `stage` to the next entry in project.json's `stages` array.
+
+## Routed re-entries
+
+Two entry points run after the `cut` stage has closed. Both touch no gates, approvals or stage fields.
+
+Composited preview: mc-pipeline routes here once mc-graphics writes `graphics/HANDOFF.md`, and again whenever an overlay is re-rendered. Re-render the preview composited per `references/rendering.md`, report any `overlays_missing`, present it, and stop.
+
+Final render: when the project reaches the final stage, offer the final-quality render per `references/rendering.md`. Finishing in the creator's own editor from the exported timeline is an equally supported path; either closes gate 4.
 
 ## Cutting rules (non-negotiable)
 
-- The two-source rule. The TRANSCRIPT is the authority on CONTENT (which words were said, in what order, so a detector can recognize a filler or a retake). The AUDIO is the authority on TIMING (where silence is, and therefore where a cut is safe). Never time a cut from transcript timestamps.
-- Never cut inside a word. Cut edges land inside an audio-verified silence, which makes this structural rather than aspirational: a cut inside real silence cannot clip a word. Pad 30 to 200 ms. Any candidate marked `"snapped": false` did not reach a silence and needs an ear.
-- 30 ms audio fades on every cut boundary.
-- Every EDL segment records: source, start, end, the quoted words, and the reason for the cut.
-- Raw recordings must be constant frame rate (mitigates FCPXML desync). The step 2 preflight catches and remuxes VFR before transcription; never cut against a VFR file.
-- Never shrink or letterbox the source video to make room for graphics; overlays composite over the full frame in safe zones.
+- Never cut inside a word. Edges land inside an audio-verified silence, which makes this structural rather than aspirational. Pad 30 to 200 ms.
+- 30 ms audio fades on every cut boundary (`fade_ms` in the EDL).
+- Never shrink or letterbox the source video to make room for graphics; overlays composite over the full frame in safe zones. Nothing enforces this one, and the beats and graphics stages inherit whatever canvas this stage leaves them.
 
-## Self-verify contract
+## Gates
 
-Four gates, each a script that exits non-zero. A stage that "checks" something without one of these is not checking it:
-
-| Gate | Script | Step |
+| Gate | Script | Where |
 |---|---|---|
-| Source QC | `preflight.py` (exit 3) | 2 |
-| Transcript completeness | `verify_transcript.py` | 3b |
-| Cut integrity | `verify_edl.py` | 6, and again after 7a |
-| Output integrity | `render_preview.py` / `render_final.py` | 8 |
+| Source QC | `preflight.py` (exit 3) | Prepare the sources |
+| Transcript completeness | `verify_transcript.py` | Transcribe and verify |
+| Cut integrity | `verify_edl.py` | Propose the cut, and again after applying |
+| Output integrity | `render_preview.py` / `render_final.py` | Deliver |
 
-Then one thing no script can do: LISTEN to the joins in the preview. A clipped word onset is inaudible in a still, and boundary frames cannot hear it. This is a human step, not a fifth gate, and it does not substitute for one.
+Three things no script can check, so they are on you:
 
-Boundary frames stay useful for what they can see (black frames, straddles): extract them at each cut and inspect, up to 3 retries per cut. On the first real project every boundary frame looked clean while the cut underneath was built on a transcript missing three paragraphs, which is why frames are the last line here and not the first.
-
-## Checklist
-
-- Preflight ran on every source and exited 0: any VFR file was remuxed and its CFR master recorded in project.json `sources`, source QC passed (or a defect was corrected with normalize_source.py, or explicitly accepted by the creator), and the disk gate passed.
-- verify_transcript.py exited 0 against the audio map, and any `--accept-region` override carries a reason the creator gave after listening. No candidate list, EDL, or render was built on an unverified transcript.
-- cutplan.py sourced silence from `cut/audio-map.json`; `unsnapped` is zero or every unsnapped candidate was checked by ear.
-- verify_edl.py exited 0 against the current EDL: every cut boundary rests in an audio-verified silence, and every segment carries quote + reason. Re-run after any EDL change, including the editorial apply. This is the mechanical check, not an eyeball.
-- Any span the snapper reported as `unsnapped` was checked by ear before it went into the EDL.
-- The editorial pass ran on `cut/edited-transcript.md` and its calls are itemized in cutplan.md; nothing from it was auto-applied, and anything the creator approved was re-detected against the audio before the EDL changed.
-- renders/preview.mp4 reported `"validated": true`, and was watched (spot-check at minimum three boundaries, listening at the joins) before declaring done; after the graphics render, the composited preview re-checked and `overlays_missing` is empty or explained.
-- FCPXML sync verified in the editor on the first project this converter touches.
-- Derived artifacts (rough.fcpxml, boundary frames, cutplan.md, the preview) were regenerated together after any EDL change; the preview's `<output>.key` sidecar matches the current EDL's render key.
+- Listen to the joins in the preview. A clipped word onset is inaudible in a still, and boundary frames cannot hear it.
+- Check any span reported `unsnapped` by ear before it goes into the EDL.
+- Verify FCPXML sync in the editor on the first project this converter touches.

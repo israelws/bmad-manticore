@@ -117,7 +117,7 @@ Deliverable folders hold exactly one blessed asset per slot; alternates, drafts,
 
 ## Cutting rules
 
-The non-negotiable cutting rules (the two-source rule, never cut inside a word, padding, fades, quote + reason per EDL segment, constant frame rate sources) and the self-verify contract live in the mc-cut skill, which is the only stage that applies them.
+The non-negotiable cutting rules (the two-source rule, never cut inside a word, padding, fades, quote + reason per EDL segment, constant frame rate sources) and the gate table that enforces them live in the mc-cut skill, which is the only stage that applies them.
 
 The one rule worth restating here, because it is the root cause of the 2026-07-24 cut-pipeline failures: the TRANSCRIPT is the authority on CONTENT, the AUDIO is the authority on TIMING. No stage derives a cut time, a beat time, or a silence from transcript timestamps.
 

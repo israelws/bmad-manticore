@@ -123,7 +123,7 @@ Real findings, deliberately not in this commit.
 
 | # | Work | Findings | Why not now |
 |---|---|---|---|
-| F1 | Carve `mc-cut/SKILL.md` into 3-4 references and regroup steps under phases | architecture-1, architecture-5, leanness-2, leanness-3, leanness-4 | A structural rewrite of the file this branch is already changing heavily. Mixing them makes the diff unreviewable. |
+| F1 | DONE 2026-07-25. Rewritten to the builder's canon, not carved. 4930 to 2353 tokens. See `F1-CARVE-PLAN.md` | architecture-1, architecture-5, leanness-2, leanness-3, leanness-4 | Was: a structural rewrite of the file this branch is already changing heavily. |
 | F2 | Resume by artifact: source digest in `audio-map.json` and `words.json`, resume clause in step 1 | enhancement-2 | New capability. Genuinely valuable on a stage whose first four steps cost tens of minutes. |
 | F3 | Persist gate 2 decisions to `cut/decisions.json`, `--decisions` flag on cutplan | enhancement-6 | New capability. Fixes real re-litigation on the second cut pass. |
 | F4 | Extend `verify_anchors.py` with the five countable beat-table quotas | determinism-3 | Expands a script that currently works and is unreleased. Better as its own change. |
