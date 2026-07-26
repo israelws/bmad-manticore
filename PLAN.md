@@ -279,7 +279,7 @@ Audited contents and where each goes:
 | mc-retro | `preserve` | `[retro]` sub-table |
 | mc-script | `craft_checklist` | Story 5, installed template, indirection dies |
 | mc-setup | 57 lines, the `[defaults]` studio config seed | `assets/studio-defaults.toml` |
-| mc-agent | 42 lines, the `[agent]` persona and menu | inline in `SKILL.md` |
+| mc-agent | 42 lines, the `[agent]` persona and menu | stays in `customize.toml`, the one platform exception (see the resolved risk below) |
 
 The three new sub-tables join the `[defaults]` seed in
 `assets/studio-defaults.toml`, so mc-setup writes them and a fresh studio has
@@ -307,15 +307,15 @@ template, which is exactly what `assets/` already holds (`tokens.template.json`,
 `blacklist-starter.md`, the format profiles). It moves to
 `assets/studio-defaults.toml` unchanged in content.
 
-**mc-agent's `[agent]`** becomes prose and a table in SKILL.md. Persona is about
-200 tokens, the 7-item menu about 400; the ~500 remaining tokens are comments
-explaining the customization mechanism and die with it. mc-agent's SKILL.md goes
-roughly 2483 to 3080, marginally over the ceiling, brought back under by its
-Story 3 pass (53 parentheticals in the skill's 5424).
-
-This also retires the precedence rule added earlier in the branch, *"`[agent]`
-wins over any description of Manny written here or anywhere else"*, which
-existed to resolve a two-homes ambiguity. One home, no rule needed.
+**mc-agent's `[agent]` stays in `customize.toml`**, because a platform reader
+requires that exact file and block (the resolved risk below). The file is
+trimmed to the `[agent]` block alone: the ~500 tokens of comments explaining
+the customization mechanism die with the mechanism. SKILL.md reads the block
+directly on activation (open `{skill-root}/customize.toml`), with no
+`resolve_customization.py` and no `_bmad/custom/` override layer. One home
+survives, so the precedence rule added earlier in the branch still retires:
+`customize.toml` is the only place Manny's persona and menu are written, and
+SKILL.md describes him nowhere.
 
 ### The mc-retro decision
 
@@ -351,34 +351,52 @@ Every site outside the toml files themselves, from
   `[cut] cutplan_flags` in the studio config)
 - `mc-setup/references/bootstrap.md:41`
 - `mc-setup/references/migration-0x.md:40` (repoint to `[cut] cutplan_flags`)
-- `mc-agent/SKILL.md:17, 68, 70` (resolver invocation and the manual
-  three-file merge fallback; both die when `[agent]` goes inline)
+- `mc-agent/SKILL.md:17, 68, 70` (the resolver invocation and the manual
+  three-file merge fallback both die; activation becomes a direct read of
+  `{skill-root}/customize.toml`)
 - `mc-agent/references/growing-the-studio.md:9` (tells creators new skills
   ship a `customize.toml`; they no longer do)
 - `mc-pipeline/PIPELINE.md:9` (`[defaults.*]` naming note) and `:71` (the
   module-wide activation contract names the resolver)
 - `mc-retro/SKILL.md:29` (the decision above)
 
-### One risk to verify, not assume
+### The risk, resolved: one platform reader exists
 
-`module.yaml` carries the agent roster that external skills (help catalog,
-party-mode) read for routing, so external discovery does not depend on
-`[agent]` in customize.toml. But whether any BMad platform machinery reads that
-block directly cannot be verified from this repo. Check before deleting
-mc-agent's file; everything else is unambiguous.
+Verified 2026-07-26 against the platform source. The BMM installer's
+`isAgentSkill()` (`tools/installer/ide/_config-driven.js:76-89`) classifies a
+skill as an agent by testing `<skill-dir>/customize.toml` for a `[agent]`
+block, driven by the GitHub Copilot platform's `commands_filter: agents-only`.
+It fails silently when the file is missing, and it does not read SKILL.md or
+`module.yaml`. Deleting mc-agent's file would silently drop Manny from
+Copilot's Custom Agents picker; inlining into SKILL.md does not satisfy it.
+
+Decision: mc-agent's `customize.toml` survives as the one exception, containing
+only the `[agent]` block, and remains the single home of the persona (see
+above). A one-line comment at the top of the file states the platform reader
+that requires it, so no future cleanup deletes it.
+
+Secondary, accepted: the `bmad-customize` core skill lists skills by
+`customize.toml` presence, so the other 14 mc-* skills disappear from its
+listing. That is correct, not a regression: they no longer have a
+customization surface to list.
 
 **AC**
 
-- Zero `customize.toml` files under `skills/`.
+- Exactly one `customize.toml` under `skills/`: mc-agent's, containing only
+  the `[agent]` block plus the one-line comment naming the platform reader
+  that requires it.
 - Zero `resolve_customization.py` invocations in any skill file, and zero
   references to `_bmad/custom/<skill>.toml` or `<skill>.user.toml` anywhere
   (the studio config files `config.toml` / `config.user.toml` remain).
-- Zero `{workflow.*}` and `{agent.*}` references; the real values live in the
+- Zero `{workflow.*}` references; the real values live in the
   `[cut]`, `[packaging]`, `[retro]` sub-tables or an installed template.
+  `{agent.*}` references survive only inside mc-agent, resolved by its direct
+  read of `{skill-root}/customize.toml`.
 - `assets/studio-defaults.toml` seeds mc-setup exactly as `[defaults]` did,
   including the three new sub-tables, and the interview produces an equivalent
   `[modules.manticore]` for a fresh studio.
-- mc-agent's persona and menu render from SKILL.md.
+- mc-agent's persona and menu render from its `[agent]` block, read directly,
+  and SKILL.md describes Manny nowhere.
 - mc-retro records mechanical corrections in the studio config and taste in
   the bible or format-profile Learnings; no dangling reference to the old layer.
 - The sweep grep above returns nothing but the studio-config sites that stay.
