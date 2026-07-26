@@ -1,18 +1,20 @@
 # Density and Creativity Reference
 
-Research-backed rules for proposing the graphics beat table from a transcript of talking-head, tutorial, or livestream-VOD content. mc-beats reads this before planning any beats. Goal: maximize retention through purposeful visual variety without clutter.
+Research-backed rules for proposing the graphics beat table from a transcript of talking-head, tutorial, or livestream-VOD content. Goal: maximize retention through purposeful visual variety without clutter.
 
-## The creativity mandate (read this first)
+## The creativity mandate
 
-The single most common failure mode of automated graphics planning is a sparse sequence of plain text cards: a few bullet slides scattered through the video. That is a failed plan. In high-retention channels, plain talking head is the minority of screen time in the opening, and the supporting visuals are diverse: b-roll, animated diagrams, screenshots with motion, annotated zooms, stat treatments, not just text.
+The failure this reference exists to prevent is a sparse sequence of plain text cards: a handful of unanimated bullet slides scattered through a long video. In high-retention channels, plain talking head is the minority of screen time in the opening and the supporting visuals are diverse: b-roll, animated diagrams, screenshots with motion, annotated zooms, stat treatments.
 
 Hard rules for every plan:
 
-- Variety quota: use at least 6 distinct overlay types (from the taxonomy below) in any video over 5 minutes. No single type may account for more than 40% of proposed beats.
-- Plain text card cap: static text-only cards may be at most 25% of beats, and never more than 2 consecutive beats of the same type. Every text moment should first be considered for an upgrade: can it be an icon plus text callout, an animated list build, a stat counter, a diagram, or a screenshot instead?
+- Variety quota: at least 6 distinct overlay types (from the taxonomy below) in any video over 5 minutes. No single type may account for more than 40% of proposed beats.
+- Plain text card cap: static text-only cards at most 25% of beats, never more than 2 consecutive beats of the same type. Every text moment is first considered for an upgrade to an icon plus text callout, an animated list build, a stat counter, a diagram, or a screenshot.
 - Escalate the treatment to the content: a number deserves a big animated stat, not a sentence on a card. A process deserves a diagram, not a paragraph. A comparison deserves a split-screen or table build, not two bullets.
 - Default to motion: every element enters and exits with simple animation (fade, slide, pop, word-by-word build). Static frames read as unfinished.
 - When in doubt, propose the richer option and mark it optional. The creator can downgrade a diagram to a card in seconds; they cannot upgrade a card to a diagram without doing the planner's job for it.
+
+The opposite failure is real too, and the density targets below are ceilings as well as floors. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up; even the most-watched hyper-edited channels publicly slowed their editing in 2024 because hyper-stimulus was hurting watch time. Space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks.
 
 ## Density tiers
 
@@ -32,7 +34,7 @@ Benchmarks behind the tiers: high-energy content changes something visually ever
 - Mid-video: settle to the tier baseline; favor context-adding b-roll and diagrams over decorative pops.
 - Reset every 1-2 minutes: insert a deliberate pattern interrupt (chapter card, big diagram, full-screen b-roll) so no long stretch is visually flat.
 - Chapter and topic changes always get a visual event, regardless of tier.
-- Livestream VODs: treat the trimmed VOD like a normal video; density targets apply to the edited runtime. Additionally add context overlays (what is happening, who is speaking, what was just asked) since replay viewers lack the live chat context.
+- Livestream VODs: density targets apply to the edited runtime like any other video. Additionally add context overlays (what is happening, who is speaking, what was just asked), since replay viewers lack the live chat context.
 
 STORYBOARD.md must justify any stretch that exceeds the tier's seconds-per-beat budget.
 
@@ -61,7 +63,7 @@ STORYBOARD.md must justify any stretch that exceeds the tier's seconds-per-beat 
 
 ## Transcript-trigger heuristics
 
-Scan the transcript sentence by sentence. Each pattern below is a trigger; the mapped treatment is the default proposal. (Adobe's B-Script research confirmed that transcript-anchored b-roll recommendation produces measurably more engaging edits than unaided placement.)
+Scan the transcript sentence by sentence. Each pattern below is a trigger; the mapped treatment is the default proposal.
 
 | Transcript trigger | Detect by | Default treatment |
 |---|---|---|
@@ -89,29 +91,12 @@ Priority when triggers collide or the budget is tight: chapter changes > process
 
 - Sync to speech: an overlay appears on the exact word it supports and leaves when the point is done. Late or lingering graphics feel broken.
 - Durations: keyword pops 1-2 s; callouts and lower thirds 3-6 s; b-roll clips 2-5 s; diagrams and list builds as long as the explanation, animating in stages.
-- One graphic at a time: never stack two competing overlays (persistent progress bars and captions excepted).
+- One graphic at a time: never stack two competing overlays (persistent progress bars and captions excepted), and never overlap beats unless the composition is explicitly layered.
 - Layout: keep a 3-5% margin from screen edges; never cover the speaker's face or the most informative region of the frame; respect caption space when captions are on.
 - Consistency: one type scale, one color system, one animation language across the whole video (the Production Bible is that contract). Variety of type, consistency of style.
 - Readable on a phone: big, high-contrast text; roughly 8 words maximum per text element.
 - Sound cues: a subtle whoosh or pop on important beats signals attention, but not on every element.
 - Match the register of the content: no memes in a corporate explainer, no neon gaming pops in a finance channel. When style is unknown, default to clean and neutral and flag tone-dependent beats as swappable.
-
-## The two anti-patterns
-
-1. Sparse static text cards. The baseline failure this reference exists to prevent: a handful of unanimated bullet slides across a long video. Fixed by the creativity mandate, the variety quota, and the tier's density floor.
-2. Overedited chaos. Endless zooms, whooshes, and effects on routine sentences fatigue viewers, especially audiences 25 and up; even the most-watched hyper-edited channels publicly slowed their editing in 2024 because hyper-stimulus was hurting watch time. Density targets are ceilings as well as floors: space elements out, keep one graphic at a time, and save the biggest treatments for genuine peaks.
-
-## Plan self-check
-
-Before presenting the beat table, verify:
-
-- Beats per minute match the configured tier, with roughly 2x density in the first 30-60 seconds.
-- No gap longer than the tier's seconds-per-beat ceiling without any visual event (or a STORYBOARD.md justification).
-- At least 6 overlay types used; no type over 40% of beats; plain text cards at or under 25%.
-- Every list, number, comparison, process, and chapter change in the transcript has a treatment.
-- Every beat is anchored to a specific transcript timestamp and phrase.
-- The biggest treatments land on the video's genuine peak moments.
-- Nothing overlaps, covers faces, or hugs screen edges.
 
 ## Sources
 

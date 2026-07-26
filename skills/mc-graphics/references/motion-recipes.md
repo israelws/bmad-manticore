@@ -11,7 +11,6 @@ The input stills come from wherever the graphic was authored: `{skill-root}/scri
 - The filtergraph ends with `format=yuva444p10le` before `prores_ks`, and the output is always ProRes 4444 (`-c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le`), per this skill's deliverable rule.
 - Parameters come from the project, never from these recipes: canvas size and fps from the format profile, the beat duration and timeline position from the approved beat table, motion durations and easing feel from the `tokens.json` motion values and the Production Bible. Timing is law; a move that wants a longer beat routes back through the creator.
 - Easing uses cubic curves in the overlay position expression: ease-out is `1-pow(1-p,3)` and ease-in is `pow(p,3)`, where `p` is the normalized progress `(t-start)/dur` of that move.
-- Verify every render with `render_verify.py` before calling it done (see the last section).
 
 ## Recipe 1: fly-in, hold, fly-out
 
@@ -37,14 +36,9 @@ ffmpeg -y \
   -t 4.5 -r 30 -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le graphics/<beat-id>.mov
 ```
 
-Reading the x expression: before `{in}` the PNG travels from fully off-screen left (`-w`) to `{X}` on an ease-out; until `{hold-end}` it rests at `{X}`; then it accelerates to `W` (off-screen right) on an ease-in. Frame 0 is fully transparent because the graphic starts entirely off-canvas.
+Frame 0 is fully transparent because the graphic starts entirely off-canvas (`-w`).
 
-Variants:
-
-- Fly in from the right: swap the entrance target arithmetic, `x='if(lt(t,{in}), W-(W-{X})*(1-pow(1-t/{in},3)), ...)'`.
-- Vertical moves: put the motion expression on `y` and fix `x`, entering from `-h` (top) or `H` (bottom).
-- Enter and exit on the same side: reuse the entrance arithmetic with the ease-in curve for the exit.
-- Hold to a hard cut: drop the third branch and let the graphic rest until `{dur}` ends.
+Variants keep the same three-branch shape: enter from the right by starting off-screen right, `x='if(lt(t,{in}), W-(W-{X})*(1-pow(1-t/{in},3)), ...)'`; move vertically by putting the expression on `y` and fixing `x`, entering from `-h` or `H`; exit on the entrance side by reusing the entrance arithmetic with the ease-in curve; hold to a hard cut by dropping the third branch.
 
 ## Recipe 2: staged infographic build
 
@@ -62,7 +56,7 @@ ffmpeg -y \
   -t 12 -r 30 -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le graphics/<beat-id>.mov
 ```
 
-Per layer, the pattern is `fade=t=in:st={Tk}:d=0.3:alpha=1` (fully transparent before its anchor, faded in 0.3 s after) plus a y expression that eases the layer from a 24 px offset to 0 over the same 0.3 s. Add or remove `[k] ... [lk]` chains and matching `overlay` links to change the layer count. Verify one extracted frame per anchor: exactly k layers visible at anchor k.
+Per layer the pattern is `fade=t=in:st={Tk}:d=0.3:alpha=1` plus a y expression easing the layer from a 24 px offset to 0 over the same 0.3 s. Change the layer count by adding or removing matching `[k] ... [lk]` chains and `overlay` links.
 
 ## Recipe 3: whoosh SFX sidecar
 

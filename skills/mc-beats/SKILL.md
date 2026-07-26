@@ -5,54 +5,80 @@ description: Riff visuals, then build the graphics beat table. Use at the beats 
 
 # mc-beats
 
-Gate 3. The beat table is the engine-neutral contract between the script and the graphics engines; no graphics code exists until the creator approves it. Read `references/density-and-creativity.md` and `references/cta-placement.md` in full before planning any beats; the Creativity Mandates below are binding on every plan.
+Act as the creator's graphics planner. The outcome is an approved beat table: `beats/beats.md` plus `beats/STORYBOARD.md`.
 
-## Steps
+The table is the engine-neutral contract between the script and the graphics engines, and no graphics code exists until the creator approves it at gate 3. Three consumers set the bar. The creator must be able to picture every beat from its storyboard paragraph alone. mc-assets farms from the `asset` column. mc-graphics renders from `type`, `engine`, and `composition` with nobody in the room to ask what was meant.
 
-1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there) and this skill's own surface (`uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`; run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after this step, and hold `{workflow.persistent_facts}` as standing context). Resolve `paths` values against `{project-root}`. Read `project.json` (confirm `approvals.cutplan` is a date, stage is `beats`), `script.md`, `cut/edl.json`, `transcript/`, `cut/editorial-review.md` when it exists (the cut stage's content review; its HAND TO BEATS section is a list of moments already judged to need a visual rather than a cut, and it is an input to the riff below), the format profile at `{formats-path}/<format>.md`, `{brand-path}/production-bible.md`, and `{brand-path}/tokens.json`. From the format profile frontmatter take `beat-types` (the beat types this format allows) and `density` (the map of high/medium/low tiers to seconds-per-beat budgets, front-loaded). The density tier is `graphics-frequency` in `[style]` of the studio config (`medium` when unset) unless the format profile frontmatter overrides it; the profile's `density` map turns the chosen tier into this plan's seconds-per-beat budget.
-2. Riff with the creator BEFORE writing the table. Walk the edited timeline once, then bring your strongest ideas to them in plain words: the moments you would put a graphic on and the treatment you would give each, as a short pitch, not a table. Lead with the hand-to-beats items from `cut/editorial-review.md` when there are any: the creator already settled at gate 2 that those moments need a visual, so they are decided work, not new pitches. Then ask what they were picturing: anything specific they already imagined for this video, moments they know they want a visual on, references they have been chewing on. A few minutes of riffing here beats a revision cycle at gate 3. Carry every answer into the plan. And never assume a medium monoculture: beats are not all static text, all SVG, all images, or all clips, gifs, and memes. The mix comes from the Production Bible (the creator's style, learned over time) plus this conversation, never from habit.
-3. Walk the EDITED timeline (times derive from edl.json, not the raw take). Scan the transcript with the trigger heuristics in `references/density-and-creativity.md` and, for every moment that earns a graphic, add a row: id, start, dur, end, anchor word with its transcript timestamp, the spoken phrase it rides on, type (one of the profile's `beat-types`), engine, asset, and the composition (named registry block or a one-line description). Apply the Creativity Mandates below to every row and to the plan as a whole.
+Read `references/density-and-creativity.md` (overlay taxonomy, transcript triggers, density tiers, pacing curve) and `references/cta-placement.md` (zones, caps, spacing) in full before planning any beats.
 
-   NEVER ESTIMATE A BEAT TIME. Every `start` is DERIVED: take the anchor word's timestamp from `transcript/words.json` (original source time) and remap it through `cut/edl.json` onto the clean edited timeline. An eyeballed time that looks right in the table is a graphic that lands off its phrase in the render, discovered after the graphics work is already paid for. `verify_anchors.py` (step 7) fails the table on any beat that does not land within 0.5s of its anchor.
-4. Mark each row's engine per the format profile defaults and PIPELINE.md's engine policy; a profile that still names `remotion` in its `engine_overlays`/`engine_stingers` frontmatter (a studio configured before 2.0.0) is written into the table as `hyperframes` per the engine policy's compatibility alias, never as `remotion`. Rows needing farmed assets carry the asset id in the `asset` column (they become the mc-assets shopping list), all other rows carry `null`.
-5. Run the CTA placement pass per `references/cta-placement.md`: read `[cta]` (inventory and appetite) from the studio config, scan the transcript for verbal CTAs and payoff seams, and plan `cta` beats within the reference's zones, caps, and spacing. CTA rows go into the same table with timestamps, anchors, and rationale, approved at gate 3 like any other beat. End-screen rule: no overlay beats in the final 20 seconds unless they ARE the end card. When the inventory includes a next-video or end-card item, optionally add an end-card beat themed from `{brand-path}/tokens.json`.
-6. Write `beats/beats.md` (the table) and `beats/STORYBOARD.md`. Each STORYBOARD.md beat gets one short paragraph that doubles as a design brief: what the viewer sees, the motion character (how it enters, moves, and exits), and the anchor phrase it rides on, in plain words a design tool could execute from.
-7. Run the anchor placement gate: `uv run {skill-root}/scripts/verify_anchors.py beats/beats.md --edl cut/edl.json --words transcript/words.json -o beats/anchor-check.json`. It independently re-derives every beat's time from its anchor word and fails on any beat that does not land within 0.5s of it, on any anchor that is not in the transcript, and on any anchor sitting in a span the cut removed. A non-zero exit is a hard stop: fix the rows it names and re-run. Do not present the table, and do not let graphics be rendered, against a table that has not passed.
-8. Update `artifacts` in project.json (`"beats": "beats/beats.md"`, `"storyboard": "beats/STORYBOARD.md"`), set `approvals.beats = "pending"`, present the table, and STOP for gate 3.
-9. On approval: record the ISO date, append `beats` to `stages_done`, and set `stage` to the next entry in project.json's `stages` array.
+## The rule that is not inferable
 
-## Creativity Mandates
+NEVER ESTIMATE A BEAT TIME. Every `start` is DERIVED: take the anchor word's timestamp from `transcript/words.json` (original source time) and remap it through `cut/edl.json` onto the clean edited timeline. An eyeballed time that looks right in the table is a graphic that lands off its phrase in the render, discovered after the graphics work is already paid for.
 
-- For every moment, propose the most visually ambitious composition the Production Bible allows before settling for less. The creator can downgrade a diagram to a card in seconds; they cannot upgrade a card to a diagram without doing the planner's job for it.
-- A static text card is the composition of last resort. Cap them at roughly a third of rows (aim for the tighter 25% target in the reference) and never place two in a row.
-- Vary across the overlay taxonomy in `references/density-and-creativity.md`: at least 6 distinct types in any video over 5 minutes, no single type over 40% of rows. Popups, staged infographic builds, lower thirds, framed real imagery, animated elements, dataviz, and screen zooms all exist for a reason; use them where their triggers fire.
-- Meet the minimum beat count for the runtime at the configured tier: edited runtime in minutes times the tier's beats-per-minute floor (high 3, medium 1.5, low 0.7), with roughly double density in the first 30-60 seconds per the pacing curve. A plan below the floor is a failed plan.
-- STORYBOARD.md must justify any stretch that exceeds the tier's seconds-per-beat budget; unexplained flat stretches fail the checklist.
-- Escalate the treatment to the content: a number gets a stat treatment, a process gets a staged diagram, a comparison gets a split or table build, not a sentence on a card.
+## Resolution rules
+
+- Bare paths and `{skill-root}` (e.g. `references/cta-placement.md`) resolve from this skill's installed directory.
+- `{project-root}` → the project working directory.
+
+## On Activation
+
+1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
+2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context.
+3. Read `project.json` (confirm `approvals.cutplan` is a date and stage is `beats`), `script.md`, `cut/edl.json`, `transcript/`, `cut/editorial-review.md` when it exists, the format profile at `{formats-path}/<format>.md`, `{brand-path}/production-bible.md`, and `{brand-path}/tokens.json`.
+4. Fix this plan's vocabulary and budget from the format profile frontmatter: `beat-types` is the whole type vocabulary for the format, and `density` maps tiers to seconds-per-beat budgets. The tier is `graphics-frequency` in `[style]` of the studio config (`medium` when unset), unless the profile frontmatter overrides it.
+
+## Riff before you plan
+
+Pitch your strongest ideas before writing any table, and ask what the creator already pictured. The hand-to-beats items in `cut/editorial-review.md` are moments gate 2 already settled need a visual rather than a cut, so lead with them: they are decided work, not pitches. The medium mix comes from the Production Bible and this conversation, never from habit.
+
+## Build the table
+
+Walk the EDITED timeline (times derive from `cut/edl.json`, not the raw take). Scan the transcript with the trigger heuristics in `references/density-and-creativity.md`, and for every moment that earns a graphic add a row.
+
+Propose the most visually ambitious composition the Production Bible allows before settling for less: the creator can downgrade a diagram to a card in seconds, but cannot upgrade a card to a diagram without doing the planner's job for it. Escalate the treatment to the content, so a number gets a stat treatment, a process gets a staged diagram, and a comparison gets a split or table build.
+
+Across the plan as a whole, hold the reference's quotas. Nothing scripted checks them, so they are yours to hold:
+
+- At least 6 distinct types in any video over 5 minutes, and no single type over 40% of rows.
+- Static text cards are the composition of last resort: under a third of rows (the reference sets a tighter 25% target), and never two in a row.
+- Beat count at or above the tier floor, which is edited runtime in minutes times the tier's beats-per-minute floor (high 3, medium 1.5, low 0.7), with roughly double density in the first 30-60 seconds per the pacing curve.
+
+`engine` comes from the format profile defaults and PIPELINE.md's engine policy. A profile that still names `remotion` in its `engine_overlays`/`engine_stingers` frontmatter (a studio configured before 2.0.0) is written into the table as `hyperframes` per the engine policy's compatibility alias, never as `remotion`. Rows needing farmed assets carry the asset id in `asset` and become the mc-assets shopping list; all other rows carry `null`.
+
+## The CTA pass
+
+Read `[cta]` (inventory and appetite) from the studio config, scan the transcript for verbal CTAs and payoff seams, and plan `cta` beats within the zones, caps, and spacing in `references/cta-placement.md`. CTA rows join the same table with timestamps, anchors, and rationale, approved at gate 3 like any other beat. No overlay beats in the final 20 seconds unless they ARE the end card. When the inventory includes a next-video or end-card item, optionally add an end-card beat themed from `{brand-path}/tokens.json`.
 
 ## Beat table format
 
-The table follows PIPELINE.md's engine-neutral contract, one row per beat:
+One row per beat, per PIPELINE.md's engine-neutral contract:
 
 | id | start | dur | end | anchor word | anchor ts | spoken phrase | type | engine | asset | composition |
 |---|---|---|---|---|---|---|---|---|---|---|
 
-- `type` is one of the format profile's `beat-types` (the frontmatter list is the whole vocabulary for the format). The reserved placeholder `overlay` exists only for READING legacy tables per PIPELINE.md's tolerance rule; mc-beats never writes it.
-- `engine` names the rendering engine per the engine policy (e.g. `hyperframes`, `html`).
-- `asset` is `null` or a farmed-asset id for mc-assets.
-- mc-beats always writes every column. When revising a legacy 0.x table that lacks the extended columns, apply PIPELINE.md's tolerance rule to read it (missing `type` reads as the reserved `overlay` placeholder, missing `engine` is the engine-policy default, missing `asset` is `null`), then write the revised table with all columns filled: every `overlay` placeholder is replaced with a type from the profile's `beat-types`.
+`composition` is a named registry block or a one-line description. mc-beats always writes every column. The reserved placeholder `overlay` exists only for READING a legacy 0.x table under PIPELINE.md's tolerance rule (missing `type` reads as `overlay`, missing `engine` is the engine-policy default, missing `asset` is `null`); the revised table is written with all columns filled and every `overlay` replaced by a type from the profile's `beat-types`.
 
-## Checklist
+## Write and verify
 
-- The riff happened before the table: the creator heard the pitched treatments and was asked what they were picturing, and every specific ask from that conversation is in the table or its absence is explained in STORYBOARD.md.
-- verify_anchors.py exited 0: every beat's time was DERIVED from its anchor word through the EDL, no anchor is missing from the transcript, and no anchor sits in a span the cut removed. This is the mechanical check, not an eyeball; a beat table that has not passed it does not reach gate 3.
-- Every hand-to-beats item from `cut/editorial-review.md` is either a row in the table or its absence is explained in STORYBOARD.md.
+`beats/beats.md` carries the table. `beats/STORYBOARD.md` gives each beat one short paragraph that doubles as a design brief: what the viewer sees, the motion character (how it enters, moves, and exits), and the anchor phrase it rides on, in plain words a design tool could execute from. It also carries what the table has no column for, and what the creator would otherwise have to ask about at the gate: any stretch exceeding the tier's seconds-per-beat budget, any specific ask from the riff or hand-to-beats item that did not become a row, any missing CTA.
+
+Then the anchor gate:
+
+```
+uv run {skill-root}/scripts/verify_anchors.py beats/beats.md --edl cut/edl.json --words transcript/words.json -o beats/anchor-check.json
+```
+
+It independently re-derives every beat's time from its anchor word and fails on any beat that does not land within 0.5s of it, on any anchor that is not in the transcript, and on any anchor sitting in a span the cut removed. A non-zero exit is a hard stop: fix the rows it names and re-run. Do not present the table, and do not let graphics be rendered, against a table that has not passed.
+
+## Before you present
+
+verify_anchors.py covers anchor placement and nothing else. These are the checks nobody else makes:
+
 - No overlapping beats unless the composition is explicitly layered.
-- Every row's `type` is in the format profile's `beat-types`, and `type`, `engine`, and `asset` are filled on every row.
-- Beat count meets the tier's minimum for the runtime, front-loaded per the pacing curve; STORYBOARD.md justifies any stretch exceeding the seconds-per-beat budget.
-- Variety quota holds: at least 6 distinct types (videos over 5 minutes), no type over 40% of rows, static text cards at or under roughly a third and never consecutive.
-- Composition consistency: every composition conforms to the Production Bible's overlay style and animation language; one visual system across the whole plan.
-- Image-type policy: every asset-bearing row respects the Production Bible's image-type policy (diagrammatic vs generative vs real) for its purpose.
-- CTA beats are present per the configured `[cta]` inventory, or their absence is justified in STORYBOARD.md.
-- No overlay beats in the final 20 seconds unless they are the end card.
-- Generated-asset rows are absent in formats whose profile bans generated b-roll.
+- One visual system across the whole plan: every composition conforms to the Production Bible's overlay style and animation language.
+- Every asset-bearing row respects the Production Bible's image-type policy (diagrammatic vs generative vs real) for its purpose.
+- No generated-asset rows in formats whose profile bans generated b-roll.
+
+## Gate 3
+
+Update `artifacts` in project.json (`"beats": "beats/beats.md"`, `"storyboard": "beats/STORYBOARD.md"`), set `approvals.beats = "pending"`, present the table, and STOP. Gate 3 is a hard stop; only the creator's explicit approval moves it. On approval, record the ISO date, append `beats` to `stages_done`, and set `stage` to the next entry in project.json's `stages` array.
