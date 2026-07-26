@@ -1,6 +1,6 @@
 ---
 name: mc-pipeline
-description: Manticore pipeline manager. Reports where a video project stands and routes to the next stage skill. Zero creative instruction. Use for "where is my project", "what's next", "run the pipeline", or when unsure which stage skill applies.
+description: Report project state and route the next stage. Use when the user says "where is my project", "what is next", or "run the pipeline".
 ---
 
 # mc-pipeline

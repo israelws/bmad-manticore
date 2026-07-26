@@ -1,6 +1,6 @@
 ---
 name: mc-script
-description: Weave the full script from the approved outline using the creator's braindump words under the quote-or-cut contract, lint it, and run the craft QA. Use at the script stage, only after gate 1 (outline) is approved.
+description: Weave the script from outline and braindump. Use at the script stage after gate 1, or when the user says "write the script" or "draft the script".
 ---
 
 # mc-script

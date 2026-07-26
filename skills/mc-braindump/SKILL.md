@@ -1,6 +1,6 @@
 ---
 name: mc-braindump
-description: Interview the creator about a video idea and capture their exact words verbatim. The braindump is the raw material every script sentence must trace back to. Use at the braindump stage or when the creator wants to talk through an idea for a project.
+description: Capture the creator's idea in their exact words. Use at the braindump stage, or when the user says "braindump", "let me talk this through", or "here is my idea".
 ---
 
 # mc-braindump

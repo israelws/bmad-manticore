@@ -1,6 +1,6 @@
 ---
 name: mc-graphics
-description: Execute the approved beat table in HyperFrames/HTML, render, frame-verify, and deliver alpha overlays plus a HANDOFF for the creator's editor. Use at the graphics stage, only after gate 3 (beats) is approved.
+description: Render the beat table into alpha overlays. Use at the graphics stage after gate 3, or when the user says "build the graphics" or "render the overlays".
 ---
 
 # mc-graphics

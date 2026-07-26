@@ -1,6 +1,6 @@
 ---
 name: mc-retro
-description: Post-publish feedback ratchet and wrap-up. Takes the creator's notes on a finished video and edits the format profile, blacklist, voice bible, production bible, and offending skill files so the pipeline compounds, then offers the post-publish wrap lane (archive hygiene, asset promotion). Runs with or without project.json. Use after a video ships, whenever the creator gives pipeline feedback, or to wrap up a published project.
+description: Turn post-publish notes into pipeline improvements. Use after a video ships, or when the user says "retro", "here is my feedback", or "wrap up this project".
 ---
 
 # mc-retro

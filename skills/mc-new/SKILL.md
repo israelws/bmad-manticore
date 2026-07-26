@@ -1,6 +1,6 @@
 ---
 name: mc-new
-description: Scaffold a new Manticore video project from a format profile, idea-first or footage-first. Use when the creator greenlights an idea ("new video", "start a project", "let's make the X video") or wants a video built from existing footage ("cut this VOD", "make a video from this recording").
+description: Scaffold a video project from a format profile. Use when the user says "new video", "start a project", "cut this VOD", or "make a video from this recording".
 ---
 
 # mc-new

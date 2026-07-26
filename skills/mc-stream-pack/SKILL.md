@@ -1,6 +1,6 @@
 ---
 name: mc-stream-pack
-description: Produce a complete branded livestream asset pack for OBS (scenes, stinger, lower thirds) from brand tokens. Use with the livestream-pack format or when the creator asks for stream assets.
+description: Build a branded livestream asset pack for OBS. Use on the livestream-pack format, or when the user says "stream assets", "OBS pack", or "scenes and stinger".
 ---
 
 # mc-stream-pack

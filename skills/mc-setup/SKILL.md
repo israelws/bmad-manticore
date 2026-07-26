@@ -1,6 +1,6 @@
 ---
 name: mc-setup
-description: Configure the Manticore studio: config, dependencies, brand, and tools. Use before the first project, when any mc-* skill reports missing config, or when the user says "set up manticore", "change my tools", or "update my studio".
+description: Configure the studio, brand, and generation tools. Use on a missing-config report, or when the user says "set up manticore", "change my tools", or "update my studio".
 ---
 
 # mc-setup

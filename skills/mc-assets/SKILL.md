@@ -1,6 +1,6 @@
 ---
 name: mc-assets
-description: Source and farm the stills and b-roll the beat table calls for, driving the creator's registered CLI tools by name, with real verified imagery preferred over generation. Use at the assets stage. Never generates UI or text that must be accurate.
+description: Farm the stills and b-roll the beats need. Use at the assets stage, or when the user says "farm the assets", "find the images", or "get the b-roll".
 ---
 
 # mc-assets

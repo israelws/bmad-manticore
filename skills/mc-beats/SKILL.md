@@ -1,6 +1,6 @@
 ---
 name: mc-beats
-description: Riff graphic and motion ideas with the creator, then build the graphics beat table (id, timing, anchor words, type, engine, asset, composition per beat) from the approved cut, plan CTA beats, and STOP for gate 3 approval. Use at the beats stage. Never writes graphics code.
+description: Riff visuals, then build the graphics beat table. Use at the beats stage after gate 2, or when the user says "plan the graphics", "beat table", or "what visuals go here".
 ---
 
 # mc-beats

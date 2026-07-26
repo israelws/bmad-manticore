@@ -1,6 +1,6 @@
 ---
 name: mc-package
-description: Produce title+thumbnail packages, description, CTA metadata, and chapters for a Manticore project; series A/B pairs, dual-timeline chapters, and a live-event mode for scheduled broadcasts. Use at the package stage (may start any time after gate 1, since the packaging promise exists from the outline).
+description: Produce titles, thumbnails, description, chapters, and metadata. Use at the package stage or any time after gate 1, or when the user says "title ideas", "thumbnail", or "package this".
 ---
 
 # mc-package

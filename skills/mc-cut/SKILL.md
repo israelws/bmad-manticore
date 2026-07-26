@@ -1,6 +1,6 @@
 ---
 name: mc-cut
-description: Cut raw takes into an approved, rendered edit. Use at the cut stage once recordings are in raw/, or when the user says "cut this", "make the cutplan", "render the preview", or "render the final".
+description: Cut raw takes into an approved, rendered edit. Use at the cut stage with recordings in raw/, or when the user says "cut the takes", "make the cutplan", "render the preview", or "render the final".
 ---
 
 # mc-cut

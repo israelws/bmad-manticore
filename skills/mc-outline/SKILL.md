@@ -1,6 +1,6 @@
 ---
 name: mc-outline
-description: Produce hook candidates, a tight outline, and the title/thumbnail promise for a Manticore project, then STOP for gate 1 approval. Use at the outline stage. Never writes the script.
+description: Draft hooks, the outline, and the packaging promise. Use at the outline stage, or when the user says "outline this", "write the outline", or "what is the hook".
 ---
 
 # mc-outline
