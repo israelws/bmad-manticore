@@ -49,6 +49,10 @@ Offer to move it there, named for the series it describes, so mc-package finds i
 Interview only what 1.0 added: render consent, the video style interview, and audio
 lanes.
 
+Copy in every shipped brand template `{brand-path}` does not have yet, above all
+`{skill-root}/assets/craft-checklist.md`: a 0.x brand folder predates it and mc-script
+stops on activation without it. Never overwrite what is already there.
+
 Scaffold `{brand-path}/production-bible.md` seeded from what already exists (tokens.json,
 shipped overlays, exemplars, format-profile learnings) plus the style answers, never from
 a blank slate. This studio has history; a blank bible throws it away.

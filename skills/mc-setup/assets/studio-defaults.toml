@@ -27,7 +27,8 @@ links = []
 [defaults.paths]
 
 # Where your studio data lives, relative to project root unless absolute.
-# brand-path holds tokens.json, voice-bible.md, blacklist.md, exemplars/, headshots/.
+# brand-path holds tokens.json, production-bible.md, voice-bible.md, blacklist.md,
+# craft-checklist.md, exemplars/, headshots/.
 brand-path = "manticore/brand"
 # formats-path holds your editable format profiles (learnings accumulate there).
 formats-path = "manticore/formats"

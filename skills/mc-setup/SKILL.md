@@ -30,7 +30,7 @@ Then route on the resolved config:
 |---|---|
 | Empty | First run. Work through everything below. |
 | Present, missing any of `[render]`, `[style]`, `[cta]`, `[live]`, `[audio]` | A 0.x studio. Load `{skill-root}/references/migration-0x.md`. |
-| Present and complete | An update pass. Say so and offer the sections below as a menu; do not walk them all. |
+| Present and complete | An update pass. Say so and offer the sections below as a menu; do not walk them all. Copy in any shipped template `{brand-path}` or `{formats-path}` is missing first, whatever the creator picks: a studio configured before a template shipped is a studio whose stage skills stop on it. |
 
 ## Dependencies and platform
 
@@ -75,7 +75,7 @@ On a non-Mac machine, confirm the stack file's expectations here too: the encode
 
 ## Build the brand
 
-Create the four path folders if missing, then fill `{brand-path}` from `{skill-root}/assets/`: `tokens.json` from the template, `blacklist.md` from the starter, and `production-bible.md` and `voice-bible.md` per their specs, which are the build instructions whether or not either gets built today. Copy into `{formats-path}` every profile from `{skill-root}/assets/formats/` that is not already there, never overwriting, because the creator's copies accumulate learnings.
+Create the four path folders if missing, then fill `{brand-path}` from `{skill-root}/assets/`: `tokens.json` from the template, `blacklist.md` from the starter, `craft-checklist.md` as shipped, and `production-bible.md` and `voice-bible.md` per their specs, which are the build instructions whether or not either gets built today. Copy into `{formats-path}` every profile from `{skill-root}/assets/formats/` that is not already there. Everything that lands in either folder is the creator's from that moment: copy only what is missing, never overwrite on a re-run, because their copies carry edits and accumulated learnings.
 
 Four things govern that work:
 

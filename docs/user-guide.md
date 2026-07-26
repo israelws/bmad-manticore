@@ -19,7 +19,8 @@ my-studio/                        <- install here, run everything from here
   .env.example                    <- scaffolded by setup if any opted-in lane needs a key
   manticore/
     brand/                        <- tokens.json, production-bible.md, voice-bible.md,
-                                     blacklist.md, exemplars/, headshots/
+                                     blacklist.md, craft-checklist.md, exemplars/,
+                                     headshots/
     formats/                      <- your editable format profiles (learnings live here)
     projects/                     <- one folder per video, fully self-contained
       my-first-video/
@@ -83,6 +84,7 @@ The Production Bible evolves after setup: mc-retro routes every visual-style not
 - `tokens.json`: colors, fonts, logo paths, motion timings. Every graphic in every engine reads this file; change it once, everything follows. Filled from your mined brand sources when they exist.
 - `production-bible.md`: the visual taste contract from section 4, scaffolded and filled during setup.
 - `blacklist.md`: regex patterns for LLM tells and phrases you never say. Ships with a starter set; grows every time you flag something in retro.
+- `craft-checklist.md`: the 16 hook, structure, and delivery rules mc-script checks every draft against before presenting it. Ships filled; edit or delete any rule that is wrong for how you write, and the script stage follows your copy.
 - `voice-bible.md`: the rules of how you actually talk. Setup offers a guided build: give it your published YouTube URLs or transcripts (fetched with yt-dlp, with permission) plus any reference creators, and it distills an evidence-cited bible where every rule quotes a verbatim example, measures your real wpm from your own transcript, and keeps your voice separate from reference voices. This is the highest-value asset in the studio.
 - `exemplars/`: your best published scripts as spoken transcripts, saved during the voice-bible build (`own/` and `reference/` kept separate).
 - `headshots/`: 3 to 6 approved photos of you with varied expressions (neutral, surprised, thinking, excited). Setup classifies and indexes them. When a thumbnail or generated asset needs you in it, the original photo goes straight to your image model with a "use the person in this image" prompt, and any revision re-sends the same original photo with an improved prompt, never a previous generation (chained edits degrade like a photocopy of a photocopy). Approved photos only; thumbnails are blocked until headshots exist, and setup says so loudly.

@@ -57,7 +57,7 @@ my-studio/                        <- install here, run everything from here
   _bmad/custom/config.toml        <- studio config ([modules.manticore]; mc-setup writes it)
   manticore/
     brand/      <- tokens.json, production-bible.md, voice-bible.md, blacklist.md,
-                   exemplars/, headshots/
+                   craft-checklist.md, exemplars/, headshots/
     formats/    <- your editable format profiles (learnings accumulate here)
     projects/   <- one folder per video, fully self-contained
     engines/    <- HyperFrames workspaces

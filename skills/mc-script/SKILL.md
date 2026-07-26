@@ -20,6 +20,7 @@ The anti-LLM-slop stage. The script is woven, not written: everything worth sayi
 3. Read `{brand-path}/voice-bible.md`. If it does not exist, tell the creator it is missing and that writing in their voice cannot happen without it, then route to mc-setup and stop.
 4. Read `{brand-path}/exemplars/`. If it does not exist, tell the creator it is missing and that weaving against their own proven scripts cannot happen without it, then route to mc-setup and stop. Take 1 to 2 files from it.
 5. Read `{brand-path}/blacklist.md`. If it does not exist, tell the creator it is missing and that the blacklist lint before handoff cannot happen without it, then route to mc-setup and stop.
+6. Read `{brand-path}/craft-checklist.md`. If it does not exist, tell the creator it is missing and that the craft pass before presenting cannot happen without it, then route to mc-setup and stop.
 
 ## The weave
 
@@ -32,7 +33,7 @@ Work beat by beat under the quote-or-cut contract:
 
 ## The CTA
 
-Weave the configured CTA line(s) from `[cta]` in the studio config, following the outline's CTA plan line and craft rule 15. CTA copy is the one sanctioned exception to quote-or-cut: it comes from the configured items (kind, label, url), not the braindump, and needs no `[INVENTED]` flag. If `[cta]` is empty, weave no ask rather than invent one.
+Weave the configured CTA line(s) from `[cta]` in the studio config, following the outline's CTA plan line and the craft checklist's lower-the-barrier rule. CTA copy is the one sanctioned exception to quote-or-cut: it comes from the configured items (kind, label, url), not the braindump, and needs no `[INVENTED]` flag. If `[cta]` is empty, weave no ask rather than invent one.
 
 ## Lines already on camera
 
@@ -41,7 +42,7 @@ If project.json `sources` has an `interview` recording, transcribe it if not yet
 ## QA before presenting
 
 - `uv run {skill-root}/scripts/lint_script.py {projects-path}/<slug>/script.md --blacklist {brand-path}/blacklist.md`. Exit 1 lists violations; fix every one.
-- Run the craft checklist at `{skill-root}/assets/craft-checklist.md`, plus the manual QA list at the bottom of the creator's blacklist.
+- Run the creator's craft checklist at `{brand-path}/craft-checklist.md`, plus the manual QA list at the bottom of their blacklist.
 - Runtime from the real word count at the creator's measured wpm (`[owner] wpm`), stated and flagged if it misses the format's target length.
 
 ## Handoff

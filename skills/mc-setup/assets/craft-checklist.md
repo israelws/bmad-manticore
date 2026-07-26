@@ -19,4 +19,4 @@ The craft pass mc-script runs after weaving and linting, before presenting. Ever
 15. Raise stakes mid-video, then LOWER the barrier right before the CTA. End on ease, not pressure.
 16. After any dense stretch, a 3 to 6 word punch sentence. No more than ~4 consecutive sentences over 20 words.
 
-Rules 1, 2, and 15 are checked against the creator's format profile: some formats (course-lesson) deliberately open with orientation instead of stakes, and the profile wins where they conflict.
+The stakes-claim opening, the hook shape, and the lower-the-barrier rule are checked against the creator's format profile: some formats (course-lesson) deliberately open with orientation instead of stakes, and the profile wins where they conflict.
