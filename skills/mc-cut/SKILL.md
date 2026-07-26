@@ -24,7 +24,9 @@ Everything else in this stage follows from that, and from one convention: a chec
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Read `project.json` (stage `cut`), `script.md`, and `{brand-path}/production-bible.md` when it exists. The Production Bible is the taste contract for the calls you make below.
+2. Read `project.json` (stage `cut`) and `script.md`.
+3. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that judging the cut against their taste cannot happen without it, then route to mc-setup and stop. The Production Bible is the taste contract for the calls you make below.
+4. Read `{brand-path}/voice-bible.md`. If it does not exist, tell the creator it is missing and that cadence-aware filler detection cannot happen without it, then route to mc-setup and stop.
 
 ## Prepare the sources
 

@@ -71,7 +71,7 @@ Every mc-* stage skill follows the same shape. No exceptions, no creativity in t
 
 1. Resolve the studio config (`resolve_config.py --key modules.manticore`); if it is empty, stop and run mc-setup.
 2. Read `project.json`. If the project's `stage` does not match this skill's stage, stop and say so (mc-pipeline routes; stage skills do not self-route). The one exception is a declared ROUTED ENTRY POINT: a section a skill declares for the router to re-enter after its own stage has closed. Those touch no gates, no approvals and no stage fields, so they cannot advance or rewind the project, and a skill that declares none has no exception. mc-cut is the only skill with any today.
-3. Read the format profile at `{formats-path}/<format>.md` and any taste files it names (all under `{brand-path}`).
+3. Read the format profile at `{formats-path}/<format>.md` and any taste files it names (all under `{brand-path}`). A taste file that does not exist stops the stage: name the file, say what cannot happen without it, route to mc-setup.
 4. Do the stage work, calling the stage skill's own scripts for anything mechanical.
 5. Run the stage's checklist (in the skill file). Fix failures before presenting.
 6. Write the artifacts to the paths in the table above. Update `artifacts` in project.json.

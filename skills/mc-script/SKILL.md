@@ -16,7 +16,10 @@ The anti-LLM-slop stage. The script is woven, not written: everything worth sayi
 ## On Activation
 
 1. Resolve the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there.
-2. Read `project.json` (confirm gate 1 passed: `approvals.outline` is a date, stage is `script`), `outline.md`, `braindump.md`, `{brand-path}/voice-bible.md`, 1 to 2 files from `{brand-path}/exemplars/`, and the format profile.
+2. Read `project.json` (confirm gate 1 passed: `approvals.outline` is a date, stage is `script`), `outline.md`, `braindump.md`, and the format profile.
+3. Read `{brand-path}/voice-bible.md`. If it does not exist, tell the creator it is missing and that writing in their voice cannot happen without it, then route to mc-setup and stop.
+4. Read `{brand-path}/exemplars/`. If it does not exist, tell the creator it is missing and that weaving against their own proven scripts cannot happen without it, then route to mc-setup and stop. Take 1 to 2 files from it.
+5. Read `{brand-path}/blacklist.md`. If it does not exist, tell the creator it is missing and that the blacklist lint before handoff cannot happen without it, then route to mc-setup and stop.
 
 ## The weave
 

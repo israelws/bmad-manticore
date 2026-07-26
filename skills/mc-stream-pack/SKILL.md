@@ -16,7 +16,9 @@ Brand tokens in, complete pack out. The `livestream-pack` format profile is the 
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Read `project.json` (stage `stream-pack`), the `livestream-pack` format profile, `{brand-path}/tokens.json`, and `{brand-path}/production-bible.md` when it exists: the styling contract beyond tokens, carrying the overlay and popup aesthetic for scenes and lower thirds, the per-series template sections, and the CTA section.
+2. Read `project.json` (stage `stream-pack`) and the `livestream-pack` format profile.
+3. Read `{brand-path}/tokens.json`. If it does not exist, tell the creator it is missing and that styling the pack cannot happen without it, then route to mc-setup and stop.
+4. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that the styling contract beyond tokens (the overlay and popup aesthetic for scenes and lower thirds, the per-series template sections, and the CTA section) cannot happen without it, then route to mc-setup and stop.
 
 ## Build the pack
 

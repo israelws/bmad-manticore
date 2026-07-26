@@ -24,8 +24,10 @@ NEVER ESTIMATE A BEAT TIME. Every `start` is DERIVED: take the anchor word's tim
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Read `project.json` (confirm `approvals.cutplan` is a date and stage is `beats`), `script.md`, `cut/edl.json`, `transcript/`, `cut/editorial-review.md` when it exists, the format profile at `{formats-path}/<format>.md`, `{brand-path}/production-bible.md`, and `{brand-path}/tokens.json`.
-3. Fix this plan's vocabulary and budget from the format profile frontmatter: `beat-types` is the whole type vocabulary for the format, and `density` maps tiers to seconds-per-beat budgets. The tier is `graphics-frequency` in `[style]` of the studio config (`medium` when unset), unless the profile frontmatter overrides it.
+2. Read `project.json` (confirm `approvals.cutplan` is a date and stage is `beats`), `script.md`, `cut/edl.json`, `transcript/`, `cut/editorial-review.md`, and the format profile at `{formats-path}/<format>.md`. Gate 2 has passed, so the editorial review exists; if it does not, hand back to mc-cut.
+3. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that the medium mix and the composition ambition below cannot happen without it, then route to mc-setup and stop.
+4. Read `{brand-path}/tokens.json`. If it does not exist, tell the creator it is missing and that brand-themed beats cannot happen without it, then route to mc-setup and stop.
+5. Fix this plan's vocabulary and budget from the format profile frontmatter: `beat-types` is the whole type vocabulary for the format, and `density` maps tiers to seconds-per-beat budgets. The tier is `graphics-frequency` in `[style]` of the studio config (`medium` when unset), unless the profile frontmatter overrides it.
 
 ## Riff before you plan
 

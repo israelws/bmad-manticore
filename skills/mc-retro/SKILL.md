@@ -19,10 +19,13 @@ Two lanes. Retro routes the creator's notes into the files that would have preve
 
 1. Studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.
 2. Establish the target. With a project, read `project.json` (stage `retro`) and take the format from it. On an ad-hoc run with no `project.json`, ask which format profile in `{formats-path}` the notes concern, or which brand file directly (`{brand-path}/voice-bible.md`, `{brand-path}/blacklist.md`, `{brand-path}/production-bible.md`), and route to that. Ad-hoc runs skip only the `project.json` bookkeeping, so ad-hoc feedback still compounds.
+3. Read `{brand-path}/voice-bible.md`. If it does not exist, tell the creator it is missing and that routing a voice or wording note cannot happen without it, then route to mc-setup and stop.
+4. Read `{brand-path}/blacklist.md`. If it does not exist, tell the creator it is missing and that routing a new blocked pattern cannot happen without it, then route to mc-setup and stop.
+5. Read `{brand-path}/production-bible.md`. If it does not exist, tell the creator it is missing and that routing a visual-style note cannot happen without it, then route to mc-setup and stop.
 
 ## Collecting the notes
 
-Read the files that may receive edits before asking for anything: `{brand-path}/voice-bible.md`, `{brand-path}/blacklist.md`, `{brand-path}/production-bible.md`, and the target format profile. Then take one round of notes: what felt wrong, what they re-edited in their editor, what they rewrote in the script, what looked off on screen, packaging performance (Test & Compare results if run). One round per session; do not fish for endless feedback.
+Read the target format profile too before asking for anything, so every file that may receive an edit is loaded. Then take one round of notes: what felt wrong, what they re-edited in their editor, what they rewrote in the script, what looked off on screen, packaging performance (Test & Compare results if run). One round per session; do not fish for endless feedback.
 
 ## Routing
 
