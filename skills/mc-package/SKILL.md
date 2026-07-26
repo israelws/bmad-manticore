@@ -22,21 +22,20 @@ invented fresh here.
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context. The `[packaging]` keys come from the same resolution.
-3. Read `project.json` and find the promise. When `stages` includes `outline`, `approvals.outline` must be an ISO date; null or `"pending"` stops the run and routes the creator back to the outline gate. Then read `outline.md` (the packaging promise) and `script.md`. When `stages` has no outline stage (footage-first and livestream projects), the promise comes from the footage: derive it from the final transcript and package only what the video actually delivers.
-4. Read the final transcript if the cut exists, the format profile at `{formats-path}/<format>.md`, `{brand-path}/tokens.json`, `{brand-path}/production-bible.md` (thumbnail style, the series templates it records, and the CTA section), `{brand-path}/headshots/` with its `index.md`, and from the studio config `[cta]` (inventory and appetite) and `[owner]` `links`.
-5. Route the branches. Format `livestream-pack` (or `stages` containing `stream-pack`) is a scheduled broadcast: work from `{skill-root}/references/live-event.md` instead of the sections below. A non-null `series` binds every candidate to that series' locked anchors: load `{skill-root}/references/series-template.md`. Read `{skill-root}/references/cta-placement.md` in full before writing the description, the pinned comment, or the end-screen guidance.
+2. Read `project.json` and find the promise. When `stages` includes `outline`, `approvals.outline` must be an ISO date; null or `"pending"` stops the run and routes the creator back to the outline gate. Then read `outline.md` (the packaging promise) and `script.md`. When `stages` has no outline stage (footage-first and livestream projects), the promise comes from the footage: derive it from the final transcript and package only what the video actually delivers.
+3. Read the final transcript if the cut exists, the format profile at `{formats-path}/<format>.md`, `{brand-path}/tokens.json`, `{brand-path}/production-bible.md` (thumbnail style, the series templates it records, and the CTA section), `{brand-path}/headshots/` with its `index.md`, and from the studio config `[packaging]` (the caps and counts below), `[cta]` (inventory and appetite) and `[owner]` `links`.
+4. Route the branches. Format `livestream-pack` (or `stages` containing `stream-pack`) is a scheduled broadcast: work from `{skill-root}/references/live-event.md` instead of the sections below. A non-null `series` binds every candidate to that series' locked anchors: load `{skill-root}/references/series-template.md`. Read `{skill-root}/references/cta-placement.md` in full before writing the description, the pinned comment, or the end-screen guidance.
 
 ## Titles
 
-`{packaging.candidates}` candidates that pay off the approved promise, under
-`{packaging.title-max-chars}` characters, front-loaded, no clickbait the video cannot cash. In a
+`[packaging] candidates` candidates that pay off the approved promise, under
+`[packaging] title-max-chars` characters, front-loaded, no clickbait the video cannot cash. In a
 series, every candidate conforms to the template's locked title pattern.
 
 ## Thumbnails
 
 Face-plus-hook is the default treatment: an approved headshot plus a 2 to 4 word hook, capped at
-`{packaging.hook-words-max}` words. The flow is locked.
+`[packaging] hook-words-max` words. The flow is locked.
 
 - Headshots come ONLY from `{brand-path}/headshots/`, picking the expression from `index.md` that
   matches the hook's emotion. When `{brand-path}/headshots/` is missing or empty, flag it loudly: face-plus-hook
@@ -57,7 +56,7 @@ Face-plus-hook is the default treatment: an approved headshot plus a 2 to 4 word
   with one improved prompt. Never pass a previous improved output back in as the base; a revision of
   a revision degrades like a photocopy of a photocopy.
 - 120px verification, mandatory, on every candidate:
-  `uv run {skill-root}/scripts/verify_thumb.py <image> --out-dir <project>/packaging/work --width {packaging.verify-width}`.
+  `uv run {skill-root}/scripts/verify_thumb.py <image> --out-dir <project>/packaging/work --width <[packaging] verify-width>`.
   Then LOOK at the proof image it writes before presenting anything. A hook that is not instantly
   readable in the proof goes back to the draft or the improvement step.
 
@@ -68,7 +67,7 @@ Presented candidates go to `packaging/thumbs/`; every draft, retry, and proof st
 
 Present the candidates as title+thumbnail PAIRS (title A with thumbnail A). Within a pair the two
 complement and never repeat each other: they share attention, not words. Series projects present
-exactly `{packaging.candidates}` pairs built on the template's locked anchors, ready for YouTube's
+exactly `[packaging] candidates` pairs built on the template's locked anchors, ready for YouTube's
 Test & Compare to run as pairs; recommend which pair to lead with and why.
 
 ## Description

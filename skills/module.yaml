@@ -7,7 +7,7 @@ default_selected: false
 
 # Agent roster, essence only. External skills (help catalog, party-mode)
 # read these descriptors to route and display agents. Full persona and
-# behavior live in the skill's customize.toml.
+# behavior live in the skill's SKILL.md.
 agents:
   - code: mc-agent
     name: Manny

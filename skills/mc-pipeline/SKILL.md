@@ -15,7 +15,7 @@ The manager. Contains no creativity and makes no taste calls.
 
 ## Steps
 
-1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there) and this skill's own surface (`uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`; run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after this step, and hold `{workflow.persistent_facts}` as standing context). Resolve `paths` values against `{project-root}`. Read `{skill-root}/PIPELINE.md` (the stage table and project.json contract) if not already in context.
+1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there). Resolve `paths` values against `{project-root}`. Read `{skill-root}/PIPELINE.md` (the stage table and project.json contract) if not already in context.
 2. If no project was named: list `{projects-path}/*/project.json`, show a one-line status per project (slug, format, stage, pending approvals), and stop.
 3. For the named project, read `project.json` and report:
    - current `stage` and what artifact it produces,

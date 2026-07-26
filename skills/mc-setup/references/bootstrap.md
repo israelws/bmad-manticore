@@ -1,6 +1,6 @@
 # Bootstrapping BMad core
 
-Load this when any of the four paths checked on activation is missing, which means
+Load this when any of the three paths checked on activation is missing, which means
 the project is not BMad-initialized. Manticore installs nothing itself: it runs the
 bmad-method installer and then verifies the result.
 
@@ -35,11 +35,9 @@ If it fails, retry with `--action update --modules core --tools <tool-id>` added
 
 ## Verify before continuing
 
-- Both resolver scripts exist under `{project-root}/_bmad/scripts/`.
+- `resolve_config.py` exists under `{project-root}/_bmad/scripts/`.
 - `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`
   exits 0. Empty output just means the interview has not run.
-- `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`
-  returns this skill's `[defaults]`.
 
 If uv itself is missing, bootstrap uv first (see the dependencies section of SKILL.md),
 then verify.

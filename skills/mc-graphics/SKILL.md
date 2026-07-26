@@ -16,7 +16,7 @@ The approved beat table comes in; rendered overlays go out. The outcome is a `gr
 
 ## On Activation
 
-1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there) and this skill's own surface (`uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`; run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after this step, and hold `{workflow.persistent_facts}` as standing context). Resolve `paths` values against `{project-root}`.
+1. Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there). Resolve `paths` values against `{project-root}`.
 2. Read `project.json` (confirm `approvals.beats` is a date, stage `graphics`), `beats/beats.md`, `beats/STORYBOARD.md`, `{brand-path}/tokens.json`, `{brand-path}/production-bible.md` (the styling contract beyond tokens.json: overlay aesthetic, motion feel, image-type policy, placement rules), the format profile, and `{skill-root}/engines/<engine>.md` for each engine the table names.
 3. Confirm the beat table passed its anchor placement gate: `beats/anchor-check.json` exists and reports `"ok": true`. Missing or failing is a stop, hand back to mc-beats. Every overlay here is positioned by a beat time, so authoring against unverified times spends the expensive stage on graphics that land off their phrases. This skill never runs mc-beats' scripts; it only checks the artifact.
 

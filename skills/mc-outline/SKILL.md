@@ -16,8 +16,7 @@ Gate 1. The outcome is `outline.md`: three hooks, one outline, and the packaging
 ## On Activation
 
 1. Resolve the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Its `paths` values resolve against `{project-root}`.
-2. Resolve this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after activation, and hold `{workflow.persistent_facts}` as standing context.
-3. Read `project.json` and confirm stage is `outline`, then `braindump.md`, the hook section of `{brand-path}/voice-bible.md` if it has been built, and the format profile.
+2. Read `project.json` and confirm stage is `outline`, then `braindump.md`, the hook section of `{brand-path}/voice-bible.md` if it has been built, and the format profile.
 
 ## Three hooks
 

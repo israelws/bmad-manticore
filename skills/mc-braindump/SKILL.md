@@ -15,7 +15,7 @@ The single most important input to the whole pipeline: the script stage may only
 
 ## On Activation
 
-Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there) and this skill's own surface (`uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`; run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after this block, and hold `{workflow.persistent_facts}` as standing context). Resolve `paths` values against `{project-root}`. Read `project.json` and `brief.md`. Confirm stage is `braindump`. Read the format profile at `{formats-path}/<format>.md` for the project's `format` and any taste files it names.
+Load the studio config (`uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`; empty means mc-setup has not run: stop and route the creator there). Resolve `paths` values against `{project-root}`. Read `project.json` and `brief.md`. Confirm stage is `braindump`. Read the format profile at `{formats-path}/<format>.md` for the project's `format` and any taste files it names.
 
 ## Offer the camera first
 

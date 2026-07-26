@@ -16,7 +16,6 @@ Scaffold the project every later stage runs against: `{projects-path}/<slug>/` h
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` once activation is done; hold `{workflow.persistent_facts}` as standing context.
 
 ## Entry points
 

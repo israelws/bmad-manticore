@@ -24,8 +24,7 @@ Everything else in this stage follows from that, and from one convention: a chec
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run; stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context.
-3. Read `project.json` (stage `cut`), `script.md`, and `{brand-path}/production-bible.md` when it exists. The Production Bible is the taste contract for the calls you make below.
+2. Read `project.json` (stage `cut`), `script.md`, and `{brand-path}/production-bible.md` when it exists. The Production Bible is the taste contract for the calls you make below.
 
 ## Prepare the sources
 
@@ -46,7 +45,7 @@ Needs the CFR master from the previous section.
 Pick the lane from `{skill-root}/references/transcription.md` (published sources take captions, not local ASR), then build the audio map and prove the transcript:
 
 ```
-uv run {skill-root}/scripts/analyze_audio.py raw/<take> -o cut/audio-map.json --noise {workflow.silence_floor_db}
+uv run {skill-root}/scripts/analyze_audio.py raw/<take> -o cut/audio-map.json --noise <[cut] silence_floor_db>
 uv run {skill-root}/scripts/verify_transcript.py transcript/words.json --audio-map cut/audio-map.json --wpm <[owner] wpm> -o cut/transcript-check.json
 ```
 
@@ -64,7 +63,7 @@ Needs a passing transcript and the audio map. This section ends at gate 2.
 uv run {skill-root}/scripts/cutplan.py transcript/words.json --audio-map cut/audio-map.json --voice-bible {brand-path}/voice-bible.md -o cut/candidates.json
 ```
 
-Plus `{workflow.cutplan_flags}`. It finds the mechanical candidates and snaps each edge into an audio-verified silence. Two things it does that are easy to undo by accident: the voice bible's `cadence` block marks the connective words that are the creator's rhythm, so those are keeps and not filler; and on an `interview` source each spoken interviewer question becomes a `marker` candidate, where the marker and question go and the answer stays. Anything reported `unsnapped` never reached a silence and needs an ear.
+Plus `[cut] cutplan_flags` from the studio config. It finds the mechanical candidates and snaps each edge into an audio-verified silence. Two things it does that are easy to undo by accident: the voice bible's `cadence` block marks the connective words that are the creator's rhythm, so those are keeps and not filler; and on an `interview` source each spoken interviewer question becomes a `marker` candidate, where the marker and question go and the answer stays. Anything reported `unsnapped` never reached a silence and needs an ear.
 
 Judge the candidates against `script.md` and the Production Bible, then write `cut/edl.json` as `{source, source_duration, fade_ms: 30, pad_ms: 60, segments: [...]}` with ordered segments of `{source, start, end, beat, quote, reason}`. Prove it:
 

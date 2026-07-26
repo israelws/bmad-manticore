@@ -166,8 +166,8 @@ DEFAULT_RESET_LOOK_S = 1.5
 # percent and starts eating the speaker's rhythm.
 #
 # This is a PACING knob and it is per-creator: a slower, more deliberate
-# delivery wants it higher. It lives in mc-cut's customize.toml for that
-# reason.
+# delivery wants it higher, which is why the studio config exposes it through
+# [cut] cutplan_flags.
 DEFAULT_MIN_SILENCE = 0.30
 
 HARD_FILLERS = {"um", "uh", "hmm", "er", "ah", "mm"}
@@ -763,12 +763,12 @@ def build(data, min_silence, retake_window, retake_run, marker_cues,
     }
 
 
-# Arguments the SKILL owns and a customization override must never reach.
-# The skill appends {workflow.cutplan_flags} AFTER these, and argparse lets a
-# later occurrence win, so without this an override file could redirect the
-# output or, far worse, point --audio-map somewhere else and quietly break the
-# two-source rule the whole stage rests on. customize.toml states the boundary
-# in a comment; this enforces it.
+# Arguments the SKILL owns and a configured flags string must never reach.
+# The skill appends [cut] cutplan_flags AFTER these, and argparse lets a later
+# occurrence win, so without this the studio config could redirect the output
+# or, far worse, point --audio-map somewhere else and quietly break the
+# two-source rule the whole stage rests on. The config comment states the
+# boundary; this enforces it.
 PROTECTED_FLAGS = ("-o", "--output", "--audio-map", "--voice-bible")
 
 

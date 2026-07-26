@@ -9,8 +9,9 @@ creator's answer and stays untouched; this pass only fills what 1.0 added.
 
 ## Backfill the config
 
-- Write the missing tables in from `[defaults]` (render, style, cta, live, audio),
-  editing the existing config surgically.
+- Write the missing tables in from `[defaults]` (render, style, cta, live, audio, plus
+  the mechanical `cut`, `packaging` and `retro` sub-tables), editing the existing config
+  surgically.
 - If `[transcription] api-key-env` names a key the configured local provider never
   uses, blank it. Metered keys are set only when a metered provider is chosen.
 - If the `[assets]` lanes still carry pre-1.0 defaults pointing at a metered API the
@@ -36,8 +37,8 @@ exist in `{formats-path}` yet.
 ## Two things that moved
 
 Interview footage recorded against the pre-1.0 marker cue ("question from claude") still
-needs to segment. Offer the marker-cue question and record the override in
-`{project-root}/_bmad/custom/mc-cut.toml` so cutplan keeps working on that footage.
+needs to segment. Offer the marker-cue question and record it as `cutplan_flags` in the
+studio config's `[cut]` sub-table so cutplan keeps working on that footage.
 
 A pre-1.0 series or thumbnail template at the brand root (for example
 `thumbnail-template.md`) predates the `{brand-path}/templates/<series>.md` contract.

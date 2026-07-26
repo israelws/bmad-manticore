@@ -17,8 +17,7 @@ Farm every still and clip the approved beat table calls for. The outcome is `ass
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there. Resolve `paths` values against `{project-root}`.
-2. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after activation, and hold `{workflow.persistent_facts}` as standing context.
-3. Read `project.json` (stage `assets`), `beats/beats.md`, the format profile, and `{brand-path}/production-bible.md`, whose image-type policy and sourcing hierarchy govern every choice here. The rows to farm are the ones whose `asset` column names an id; a 0.x table with no `asset` column has nothing to farm. If the profile says `generated_broll: banned`, stop and report, because something upstream is wrong.
+2. Read `project.json` (stage `assets`), `beats/beats.md`, the format profile, and `{brand-path}/production-bible.md`, whose image-type policy and sourcing hierarchy govern every choice here. The rows to farm are the ones whose `asset` column names an id; a 0.x table with no `asset` column has nothing to farm. If the profile says `generated_broll: banned`, stop and report, because something upstream is wrong.
 
 Before any generative farm or revision, load `{skill-root}/references/generative-editing-rules.md`. Its rules on chaining, compositing, self-inspection, people, and prompting bind every lane and every provider.
 

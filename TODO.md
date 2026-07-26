@@ -88,6 +88,31 @@ Document (in format profiles, and possibly a beat type) when to use which visual
 
 - YouTube API publishing and A/B test submission. 1.0 produces blessed assets under the one-blessed-asset-per-slot convention; the creator uploads.
 
+## Accepted regression: Copilot's agents-only filter
+
+Recorded 2026-07-26, when `customize.toml` was removed from all 15 skills. The studio defaults
+moved to `mc-setup/assets/studio-defaults.toml`, the `[agent]` persona and menu inlined into
+`mc-agent/SKILL.md`, and the mechanical knobs became the `[cut]`, `[packaging]` and `[retro]`
+sub-tables of the studio config.
+
+The BMM installer classifies a skill as an agent by testing `<skill-dir>/customize.toml` for an
+`[agent]` block: `isAgentSkill()` in `tools/installer/ide/_config-driven.js` (lines 76-89),
+consumed at line 335 under the `commands_filter: agents-only` set for GitHub Copilot in
+`tools/installer/ide/platform-codes.yaml` (line 163). It reads neither SKILL.md nor
+`module.yaml`, and a missing file returns false with no error, so mc-agent silently stops
+appearing in Copilot's Custom Agents picker. No other platform is affected and mc-agent is still
+invoked by name everywhere, so the maintainer accepted the regression rather than keep one file
+alive for one picker.
+
+The fix is upstream in bmad-bmm: teach `isAgentSkill()` a second detection path, the `agents:`
+roster in `skills/module.yaml` or SKILL.md frontmatter, and update the assertions in
+`test/test-installation-components.js` (lines 648, 683, 753). Until that lands the regression
+stands.
+
+Not a regression, same change: the `bmad-customize` core skill lists customizable skills by
+`customize.toml` presence, so no mc-* skill appears in its listing. Correct, because there is no
+per-skill customization surface left to list.
+
 ## Release path
 
 - Bump version in marketplace.json, tag, then PR to the bmad-plugins-marketplace registry (registry/community/).

@@ -16,8 +16,7 @@ The anti-LLM-slop stage. The script is woven, not written: everything worth sayi
 ## On Activation
 
 1. Resolve the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there.
-2. Resolve this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now, `{workflow.activation_steps_append}` after activation, and hold `{workflow.persistent_facts}` as standing context.
-3. Read `project.json` (confirm gate 1 passed: `approvals.outline` is a date, stage is `script`), `outline.md`, `braindump.md`, `{brand-path}/voice-bible.md`, 1 to 2 files from `{brand-path}/exemplars/`, and the format profile.
+2. Read `project.json` (confirm gate 1 passed: `approvals.outline` is a date, stage is `script`), `outline.md`, `braindump.md`, `{brand-path}/voice-bible.md`, 1 to 2 files from `{brand-path}/exemplars/`, and the format profile.
 
 ## The weave
 
@@ -39,7 +38,7 @@ If project.json `sources` has an `interview` recording, transcribe it if not yet
 ## QA before presenting
 
 - `uv run {skill-root}/scripts/lint_script.py {projects-path}/<slug>/script.md --blacklist {brand-path}/blacklist.md`. Exit 1 lists violations; fix every one.
-- Run the craft checklist at `{workflow.craft_checklist}`, plus the manual QA list at the bottom of the creator's blacklist.
+- Run the craft checklist at `{skill-root}/assets/craft-checklist.md`, plus the manual QA list at the bottom of the creator's blacklist.
 - Runtime from the real word count at the creator's measured wpm (`[owner] wpm`), stated and flagged if it misses the format's target length.
 
 ## Handoff

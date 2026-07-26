@@ -7,7 +7,7 @@ docstring; this file carries the wiring and the decisions.
 ## Where encoder settings live
 
 The studio config is their single home. Emit the `[render]` and `[video]` keys
-first, then `{workflow.preview_flags}` or `{workflow.final_flags}` last.
+first, then `[cut] preview_flags` or `[cut] final_flags` last.
 
 Because the last occurrence wins, restating a key the config owns inside a flags
 string silently overrides it, and which value applies then depends on emission
@@ -20,7 +20,7 @@ put `--height`, `--crf`, or the loudness flags in them.
 ```
 uv run {skill-root}/scripts/render_preview.py cut/edl.json \
     -o renders/preview.mp4 --boundary-frames cut/boundaries/ \
-    plus {workflow.preview_flags}
+    plus [cut] preview_flags
 ```
 
 Defaults to 720p CRF 28 when `[render]` leaves them unset. Never
@@ -40,7 +40,7 @@ has not landed in `graphics/`.
 ```
 uv run {skill-root}/scripts/render_final.py cut/edl.json \
     -o renders/final.mp4 --beats beats/beats.md --graphics-dir graphics/ \
-    plus {workflow.final_flags}
+    plus [cut] final_flags
 ```
 
 Wire the config in: `--codec` and `--crf` from `[render]`, `--height` from the

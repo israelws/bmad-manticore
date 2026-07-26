@@ -18,8 +18,7 @@ Read `{skill-root}/references/audio-lanes.md` before farming anything; the ladde
 ## On Activation
 
 1. Load the studio config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`. Empty means mc-setup has not run: stop and route the creator there.
-2. Load this skill's own surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after activation, and hold `{workflow.persistent_facts}` as standing context.
-3. Resolve `paths` values against `{project-root}`. From `[audio]` take the lane values (`tts-provider`, `music-provider`, `sfx-provider`, `song-provider`) and `workspace`; the engine workspace is `{engines-path}/{audio.workspace}`.
+2. Resolve `paths` values against `{project-root}`. From `[audio]` take the lane values (`tts-provider`, `music-provider`, `sfx-provider`, `song-provider`) and `workspace`; the engine workspace is `{engines-path}/{audio.workspace}`.
 
 ## The lane
 

@@ -6,7 +6,7 @@ Load this file when the creator wants a capability Manticore does not have. Scop
 
 1. If the BMB builder skills are available in this harness (bmad-workflow-builder, bmad-agent-builder), use them; they are the canonical factory.
 2. If not, suggest installing the BMB module (`npx bmad-method install` and add bmb), and offer to proceed without it meanwhile.
-3. Without BMB, follow the skill best practices at https://agentskills.io/skill-creation/best-practices and the house rules: taste in files, mechanics in scripts run via `uv run` with PEP 723 metadata, skills as thin routers, config through the studio config and a `customize.toml`, nothing user-specific inside the skill itself.
+3. Without BMB, follow the skill best practices at https://agentskills.io/skill-creation/best-practices and the house rules: taste in files, mechanics in scripts run via `uv run` with PEP 723 metadata, skills as thin routers, config through the studio config, nothing user-specific inside the skill itself.
 
 ## Joining the pipeline
 

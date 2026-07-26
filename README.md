@@ -121,7 +121,7 @@ Seven ship by default: talking-head, screen-tutorial (real UI only, generated b-
 
 ## The skills
 
-16 skills, each self-contained: a skill ships its own defaults (`customize.toml`), scripts, and knowledge, and reads only its own folder, the installed BMad core scripts, and your project files.
+15 skills, each self-contained: a skill ships its own scripts and knowledge, and reads only its own folder, the installed BMad core scripts, and your project files.
 
 | Skill | What it does |
 |---|---|

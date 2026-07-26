@@ -20,9 +20,9 @@ Idempotent throughout: on re-run, existing values are the defaults offered, only
 
 ## On Activation
 
-1. Check four paths: `{project-root}/_bmad/config.toml`, `{project-root}/_bmad/scripts/resolve_config.py`, `{project-root}/_bmad/scripts/resolve_customization.py`, `{project-root}/_bmad/custom/`. Any missing means the project is not BMad-initialized; load `{skill-root}/references/bootstrap.md` and finish it before continuing.
+1. Check three paths: `{project-root}/_bmad/config.toml`, `{project-root}/_bmad/scripts/resolve_config.py`, `{project-root}/_bmad/custom/`. Any missing means the project is not BMad-initialized; load `{skill-root}/references/bootstrap.md` and finish it before continuing.
 2. Resolve the current state: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key modules.manticore`.
-3. Load this skill's surface: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root}`. Run `{workflow.activation_steps_prepend}` now and `{workflow.activation_steps_append}` after this block; hold `{workflow.persistent_facts}` as standing context. Its `[defaults]` are the seed values for the whole interview and the authority on every default.
+3. Read `{skill-root}/assets/studio-defaults.toml`. Its `[defaults]` tables are the seed values for the whole interview and the authority on every default.
 
 Then route on the resolved config:
 
@@ -56,13 +56,14 @@ Idempotent, so a re-run refreshes rather than duplicates. `npx hyperframes skill
 
 ## Interview the studio
 
-Walk the `[defaults]` tables from `{skill-root}/customize.toml`, offering current values as defaults. That file is the authority on the schema and every value in it; do not re-derive the question list here. What follows is only what reading the schema will not tell you.
+Walk the `[defaults]` tables from `{skill-root}/assets/studio-defaults.toml`, offering current values as defaults. That file is the authority on the schema and every value in it; do not re-derive the question list here. What follows is only what reading the schema will not tell you.
 
 **Traps in the basics.**
 
 - Video defaults: offer to ffprobe a recent recording and fill them from reality instead of asking the creator to recall numbers.
 - Speaking rate: leave the default and say mc-script will flag it as unmeasured. The voice bible measures it for real.
-- A non-default interview marker cue is not a config key. Record it as `cutplan_flags = '--marker-cues "<cue>"'` in `{project-root}/_bmad/custom/mc-cut.toml`, edited surgically.
+- A non-default interview marker cue is not a key of its own. Record it as `cutplan_flags = '--marker-cues "<cue>"'` in the `[cut]` sub-table, edited surgically.
+- `[cut]`, `[packaging]` and `[retro]` are mechanical knobs rather than taste: write them from the defaults instead of interviewing them. The one worth raising is `[cut] silence_floor_db`, a property of the creator's room and mic; offer it when they mention a noisy room.
 
 **Render consent is performed, not assumed.** Before writing `[render]`, present the render-first default and get an explicit answer: Manticore previews every cut and beats iteration and offers a final at gate 4, while the timeline export and all assets are ALWAYS produced alongside, so the creator can move into their own editor at any step. Declining makes the renders offers instead of automatic outputs and changes nothing else. Offer the quality knobs only if asked.
 
@@ -111,7 +112,7 @@ Write the results as `[modules.manticore]` and its sub-tables into `{project-roo
 Close with the runnability report, which is the actual deliverable of this stage:
 
 - Locked behavior: what will happen on the first project with these settings. Render-first preview and offered final, the graphics-frequency tier, the CTA inventory, the transcription lane and whether THIS machine can run it, the audio lanes and whether the workspace is built, the timeline format, and whether the HyperFrames skills are installed or deferred.
-- Lane status: implemented or planned for every configured lane, straight from the `{skill-root}/customize.toml` comments.
+- Lane status: implemented or planned for every configured lane, straight from the `{skill-root}/assets/studio-defaults.toml` comments.
 - Pending gaps, flagged loudly: missing headshots (thumbnails blocked), unbuilt voice bible, placeholder bible sections, unverified tools, empty asset lanes.
 - Whether the harness has browser automation. Packaging research degrades without it, and the report says so when it is absent.
 
@@ -122,5 +123,5 @@ Point at mc-new to start the first project, and at the pending list as the highe
 - Confirm before every install, every MCP add, every command that changes the system.
 - Presence checks only for secrets; never read, echo, or store key values. Keys never go in the TOML, in chat, or in `.env.example`.
 - Paid and metered vendors are opt-in only: no vendor key name, dashboard, or pricing mention outside the branch where the creator explicitly chose that lane.
-- Never claim a planned lane works. `{skill-root}/customize.toml` marks each transcription, editor and audio lane implemented or planned; relay that status honestly everywhere it comes up.
+- Never claim a planned lane works. `{skill-root}/assets/studio-defaults.toml` marks each transcription, editor and audio lane implemented or planned; relay that status honestly everywhere it comes up.
 - Never touch `{project-root}/_bmad/config.toml`, which is installer-owned. Manticore's home is the `custom/` layer.

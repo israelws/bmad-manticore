@@ -35,7 +35,7 @@ npx bmad-method install --custom-source https://github.com/bmad-code-org/bmad-ma
 
 ## 2. Run mc-setup: the onboarding interview
 
-Say "talk to Manny" and he routes you here, or say "run manticore setup" directly. It walks you through everything below and writes the studio config: the `[modules.manticore]` table in `_bmad/custom/config.toml` (personal overrides go in `config.user.toml` next to it). Every other skill resolves that table with the installed `_bmad/scripts/resolve_config.py`; if it is empty, they send you back here. Re-run it any time; it updates rather than overwrites, and it detects a 0.x studio and runs a short delta interview instead of starting over. Each skill also ships its own `customize.toml` defaults, overridable per skill in `_bmad/custom/<skill>.toml`.
+Say "talk to Manny" and he routes you here, or say "run manticore setup" directly. It walks you through everything below and writes the studio config: the `[modules.manticore]` table in `_bmad/custom/config.toml` (personal overrides go in `config.user.toml` next to it). Every other skill resolves that table with the installed `_bmad/scripts/resolve_config.py`; if it is empty, they send you back here. Re-run it any time; it updates rather than overwrites, and it detects a 0.x studio and runs a short delta interview instead of starting over.
 
 What the interview covers, in order:
 
