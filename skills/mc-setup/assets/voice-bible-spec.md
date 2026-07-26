@@ -34,7 +34,7 @@ cut: basically, honestly, kind of, you know
 - On conflict, `keep` wins. Preserving rhythm is the safer failure: a kept filler is a small blemish, a cut cadence word changes how the creator sounds.
 - Phrases are allowed on both lists; match is case-insensitive and punctuation-stripped.
 
-Why this exists: on the first real project the cutter flagged all 19 of the creator's sentence-initial "So"s as filler, while their voice bible explicitly named "so" as their natural connective glue. The prose rule was there and nothing could read it. Derive both lists from the exemplars in step 3, the same evidence-quote discipline as every other rule here.
+Why this exists: the cutter reads these lists, not the prose above them. A cadence rule stated only in prose cannot stop the cutter flagging every sentence-initial "So" the creator uses as connective glue. Derive both lists from the exemplars in step 3, the same evidence-quote discipline as every other rule here.
 
 ## Consumers
 

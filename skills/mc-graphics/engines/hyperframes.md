@@ -4,13 +4,13 @@ Default engine for everything the pipeline renders as motion: per-video overlay 
 
 ## The skills are the source of truth
 
-HyperFrames is pre-1.0 and moves fast, so this file never transcribes its full capability list or pins a version: that would only ship stale knowledge to every creator. The agent loads HyperFrames' own Agent Skills instead, which teach the current authoring patterns (the `data-*` attributes, GSAP timeline registration, the component vocabulary, every effect) and refresh themselves.
+HyperFrames is pre-1.0 and moves fast, so anything transcribed here ships stale. Load HyperFrames' own Agent Skills instead, which teach the current authoring patterns (the `data-*` attributes, GSAP timeline registration, the component vocabulary, every effect) and refresh themselves.
 
 - mc-setup installs them (`npx skills add heygen-com/hyperframes --all --full-depth` for the whole catalog, or `npx hyperframes skills update` for the maintained core set), so the capability surface is known from the beats stage onward. mc-graphics installs them on first use if setup was skipped.
 - `npx hyperframes init` refreshes the core set plus whatever is already installed; `npx hyperframes skills check` reports drift and `npx hyperframes skills update` applies it. Refresh, never blindly expand.
 - When a beat needs something, read the installed skills rather than this file, and fetch https://hyperframes.heygen.com/llms.txt for the always-current capability index when they do not cover it.
 
-The engine WORKSPACE still initializes lazily on the first graphics run (below); only the lightweight skill knowledge lands at setup. The harness loads skills by its own resolution; nothing here is specific to one agent.
+The engine WORKSPACE still initializes lazily on the first graphics run (below); only the lightweight skill knowledge lands at setup.
 
 ## What it can do
 

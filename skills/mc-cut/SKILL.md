@@ -54,7 +54,7 @@ The audio map is the timing source of truth for the whole stage, built once per 
 
 A non-zero exit from `verify_transcript.py` is a HARD STOP: it finds audio above the silence floor that produced no words and names the regions. Nothing may be built on a transcript that has not passed, because downstream a hole in the transcript looks exactly like dead air and the cut deletes real content. `{skill-root}/references/transcription.md` carries the override for a region the creator has listened to and confirmed.
 
-Every lane windows in 20s isolated windows with 3s overlap. This is not a tuning knob, and never raise `--window` to go faster: parakeet drops whole paragraphs inside long windows with no error at all. Measured on the take that exposed it, 120s chunks lost three paragraphs, 90s still lost content, 20s was complete. That silent drop corrupted a real project on 2026-07-24.
+Every lane windows in 20s isolated windows with 3s overlap. This is not a tuning knob, and never raise `--window` to go faster: parakeet drops whole paragraphs inside long windows with no error at all. Measured: 120s chunks lost three paragraphs, 90s still lost content, 20s was complete.
 
 ## Propose the cut
 

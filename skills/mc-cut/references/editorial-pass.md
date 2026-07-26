@@ -26,16 +26,16 @@ Inside the cut stage, after the mechanical EDL is assembled, before gate 2.
 
 It reads the EDITED transcript, `cut/edited-transcript.md` from `edited_transcript.py`, which is `words.json` intersected with the kept EDL segments. Not the script, and not the raw transcript:
 
-- The script is what was planned. Delivery diverges from it: ad-libs, dropped lines, live rewrites. The first real project diverged substantially, and two of the strongest findings were about ad-libbed content that was never in the script at all.
+- The script is what was planned. Delivery diverges from it: ad-libs, dropped lines, live rewrites, and the strongest findings are often about ad-libbed content that was never in the script at all.
 - The raw transcript still contains everything the mechanical pass removed, so a pass reading it reviews words the viewer never hears.
 
 Content is cheapest to change before you decorate. If this pass recommends cutting a section and beats has already built an overlay and a punch-in for it, that visual work is dead and beats must be re-planned. Settle what stays before spending effort on how it looks. Re-record flags loop back through the cut, and beats plans against the final cut, so pickups must land first.
 
-The bug report that prompted this proposed a separate stage and a fifth gate. That was not adopted: it changes a settled design invariant (four gates), and folding the pass in front of gate 2 removes rework rather than adding a stop. On the project that exposed all this, gate 2 was approved first and the editorial pass ran after, which forced a rebuild of the approved EDL.
+This pass is never a separate stage and never adds a fifth gate: four gates is a settled invariant, and folding the pass in front of gate 2 removes rework rather than adding a stop. Approving gate 2 before this pass runs forces a rebuild of the approved EDL.
 
 ## What it hunts for
 
-1. Redundancy. A point already made, restated with no new value. Conceptual, not verbatim: the mechanical retake detector cannot see it because the words differ. Respect deliberate repetition. Callbacks, rule of three, anadiplosis, and the intentional emphasis the script or voice bible calls for are craft, not accident. Cut accidental repetition, keep rhetorical repetition. On the real project the pass correctly kept "the dashboard was never the point. The point is the flip" and correctly cut an ad-libbed recap that restated two points made ninety seconds earlier.
+1. Redundancy. A point already made, restated with no new value. Conceptual, not verbatim: the mechanical retake detector cannot see it because the words differ. Respect deliberate repetition. Callbacks, rule of three, anadiplosis, and the intentional emphasis the script or voice bible calls for are craft, not accident. Cut accidental repetition, keep rhetorical repetition.
 2. Off-goal or pacing drag. Stretches that do not serve the promised payoff: tangents, over-explanation, throat-clearing paragraphs. The test is "does this earn its runtime for this video's goal?", judged against `brief.md`.
 3. Contradiction or confusion. Statements that conflict, a claim later walked back, an ambiguous antecedent, a muddied argument. Open loops belong here: a promise the video sets up and never pays off is a structural defect, and it has two clean fixes, cut the setup or re-record the payoff.
 4. Errors and misstatements. Factually wrong or misspoken content. Two outcomes: cuttable (remove it and the piece still stands) or load-bearing (the point matters but is wrong), which is a re-record.
@@ -44,13 +44,13 @@ The bug report that prompted this proposed a separate stage and a fifth gate. Th
 
 Never apply a finding from a transcript-read timecode. Re-detect the span against the audio first.
 
-This is the hardest-won lesson in this file. On the first real run the pass produced good findings and bad coordinates: most of its source-timecode estimates had drifted to the wrong windows, and a blind apply would have cut the wrong spans. It was caught only because the applying agent re-detected each span by pattern against the kept audio before touching the EDL.
+The pass produces good findings and bad coordinates: source-timecode estimates read off a transcript drift to the wrong windows, so a blind apply cuts the wrong spans. Re-detecting each span by pattern against the kept audio before touching the EDL is what catches it.
 
 So:
 
 - Quote findings by CLEAN time for the human (that is what the preview shows), and apply them by SOURCE time against the EDL. `edited_transcript.py` emits both for every word so neither is ever derived by hand.
 - Before applying any span, re-locate it in `cut/edited-words.json` by its words, then snap the resulting cut edges into audio silences from `cut/audio-map.json`, exactly as the mechanical tier does. A cut edge that cannot reach a silence needs an ear before it is applied.
-- Word-level findings are lower confidence than idea-level ones and must be marked. You are reading a transcript, not hearing audio: a doubled word in the text may be a transcription artifact rather than a real stumble. On the real project two high-stakes word-level findings (a CEO's name and the creator's own domain) were both transcription artifacts, and acting on either would have triggered a pointless re-record. Idea-level findings survive transcription noise; word-level findings do not.
+- Word-level findings are lower confidence than idea-level ones and must be marked. You are reading a transcript, not hearing audio: a doubled word in the text may be a transcription artifact rather than a real stumble, and acting on one triggers a pointless re-record. Idea-level findings survive transcription noise; word-level findings do not.
 
 ## Reuse the reviewers that already ship
 

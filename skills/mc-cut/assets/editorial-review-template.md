@@ -87,7 +87,7 @@ Nothing here has been applied. Tell me which items you want and I will apply the
 
 ## APPLIED, `<YYYY-MM-DD>` (`<creator>`'s calls: `<summary>`)
 
-`<Append this section only after the creator decides. It is the audit trail, and on the first real project it was the most useful part of the document.>`
+`<Append this section only after the creator decides. It is the audit trail.>`
 
 Backup of the pre-editorial cut: `cut/edl.pre-editorial.json`. Runtime `<before>` → `<after>` (`<N>`s removed, `<X>` → `<Y>` segments). All cuts whole-word and silence-anchored.
 

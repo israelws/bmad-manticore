@@ -37,7 +37,7 @@ Post-production of a recorded livestream (or any long single-take source) into a
 
 ## Learnings
 
-(mc-retro appends here; newest first, ISO dated. Seeded below from the module's first production runs, genericized.)
+(mc-retro appends here; newest first, ISO dated.)
 
 ### 2026-07-07 asset tiers, live loading, and post-publish hygiene
 

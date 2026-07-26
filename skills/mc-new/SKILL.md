@@ -44,7 +44,7 @@ Fill `brief.md` from what the creator gives you, never invented; ask if it is th
 
 ## Handoff
 
-Report the created project and route to the skill named by `stage` in `project.json` (idea-first lands on braindump, mc-braindump; footage-first on cut, mc-cut). Never assume the master stage list.
+Report the created project and route to the skill named by `stage` in `project.json`. Never assume the master stage list.
 
 ## Checklist
 

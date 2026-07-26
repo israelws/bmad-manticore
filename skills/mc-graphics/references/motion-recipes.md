@@ -26,7 +26,7 @@ ffmpeg -y \
   -t {dur} -r {fps} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le graphics/<beat-id>.mov
 ```
 
-Worked example, validated end to end (1920x1080 at 30 fps, 4.5 s beat, 0.6 s fly-in from the left, 0.4 s fly-out to the right, rest at 120,780):
+Worked example (1920x1080 at 30 fps, 4.5 s beat, 0.6 s fly-in from the left, 0.4 s fly-out to the right, rest at 120,780):
 
 ```bash
 ffmpeg -y \
@@ -46,7 +46,7 @@ An infographic that assembles as the speaker names each part, one reveal per anc
 
 Parameters per layer `k`: `{Tk}` the layer's anchor time in seconds measured from the beat's start (anchor ts minus beat start, from the approved beat table).
 
-Worked example, validated end to end (three layers at 1.2 s, 4.8 s, 8.1 s inside a 12 s beat, 1920x1080 at 30 fps):
+Worked example (three layers at 1.2 s, 4.8 s, 8.1 s inside a 12 s beat, 1920x1080 at 30 fps):
 
 ```bash
 ffmpeg -y \
@@ -70,7 +70,7 @@ ffmpeg -y -i whoosh.wav \
   -ar 48000 -c:a pcm_s16le graphics/<beat-id>-sfx.wav
 ```
 
-Validated example: a fly-in starting 1.2 s into a 12 s beat used `adelay=1200|1200,apad=whole_dur=12` and produced an exactly 12.0 s wav with the whoosh landing at 1.2 s.
+Worked example: a fly-in starting 1.2 s into a 12 s beat uses `adelay=1200|1200,apad=whole_dur=12` and produces an exactly 12.0 s wav with the whoosh landing at 1.2 s.
 
 ## Verify before done
 

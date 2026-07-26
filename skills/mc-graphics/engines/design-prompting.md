@@ -57,7 +57,8 @@ No paraphrasing, no added copy, no lorem ipsum, no watermarks.
 
 - Feel: {3-5 adjectives from the bible's animation section}
 - Overlay aesthetic: {surface treatment, radius, shadow/glow per the bible}
-- Ease: tokens motion easeDefault for entrances, easeEmphasis for the hit.
+- Ease and duration: tokens motion `easeDefault` for entrances, `easeEmphasis`
+  for the hit, `durationBaseMs` for the main move, `durationFastMs` for accents.
 - In/out: animate in over {x}ms, hold, resolve out over {y}ms fully inside
   the beat duration (or hold the last frame to a hard cut; pick one).
 
@@ -98,48 +99,12 @@ Reusable ffmpeg motion primitives (fly-in and fly-out with optional whoosh, stag
 
 - A subtle full-frame gradient reads as a design flourish and kills the overlay, because it
   makes every pixel opaque. The checkerboard toggle and the extracted-frame check catch it.
-- Models paraphrase text they are asked to render. That is why the brief marks strings
-  verbatim and the anchor-frame check includes reading them back.
+- Models paraphrase text they are asked to render, so read the strings back off the
+  anchor frame.
 - The hosted preview is never the deliverable. The local frame-stepped render is, and the
   two can disagree.
 
-## Worked example
-
-Transcript moment: at 03:12.4 the speaker says "the transcript IS the timeline: every cut and every graphic anchors to a word."
-
-```markdown
-# Design brief: b07-transcript-is-timeline
-
-## Beat
-
-start 03:12.0 / dur 4.5s / end 03:16.5 (135 frames @ 30fps, 1920x1080)
-anchor word: "timeline" at 03:13.1; underline hit lands ON "timeline"
-spoken phrase: "the transcript IS the timeline"
-## Exact text
-
-1. "THE TRANSCRIPT IS THE TIMELINE"
-## Canvas and alpha
-
-Transparent. Speaker occupies the right third; graphic lives lower-left,
-inside 5% title-safe. Nothing crosses x > 60% of frame width.
-## Brand
-
-<tokens.json inline> Accent underline uses the accent color; text in the
-primary text color on a surface-color chip at 85% opacity.
-## Look and motion feel
-
-Confident, snappy, engineered (per the bible). Chip slides up 24px and
-fades in over durationBaseMs (easeDefault); accent underline draws
-left-to-right over durationFastMs, timed to hit full width at the anchor
-(easeEmphasis); the whole unit resolves out (slide down and fade) in the
-final 400ms.
-## Determinism contract / Acceptance
-
-<standard blocks; key-state frame check at 03:13.1: text fully legible,
-underline complete>
-```
-
-Two variants of the same template:
+## Two variants of the brief template
 
 - Multi-anchor beats (a diagram that builds as the speaker names each stage) list every anchor with its timestamp in the Beat block, and their acceptance is a per-anchor frame check: exactly k elements visible at anchor k.
 - A HyperFrames stinger brief adds a Deliverables block (ONE comp, TWO renders: ProRes 4444 MOV for the editor, VP9 yuva420p WebM for the live lane) and keeps to 1 to 2 seconds, because transparent WebM renders slowly.
