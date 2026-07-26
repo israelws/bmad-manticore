@@ -158,6 +158,8 @@ Add to `AGENTS.md` design invariants, in these words or better:
 
 **As** a model executing a skill, **I want** one unambiguous meaning for a bare
 path **so that** I do not look for `beats/STORYBOARD.md` inside the skill folder.
+Cites invariant 2, which fixes the meaning of a bare path, `{skill-root}` and
+`{project-root}` module-wide.
 
 Today every Resolution rules block says *"Bare paths and `{skill-root}` resolve
 from this skill's installed directory."* That is false for the majority case:
@@ -172,11 +174,10 @@ from this skill's installed directory."* That is false for the majority case:
 mc-setup, **and** the video-project folder mc-assets writes `manifest.json` into.
 Same token, two meanings, same module.
 
-**Decision: invert the default rather than prefix 126 sites.** Bare means the
-current video project. Skill files always carry `{skill-root}`. Define
-`{video-path}` in Resolution rules for explicit use where a line would otherwise
-be ambiguous. This is 41 edits instead of 126, and it reduces tokens rather than
-adding them.
+**Decision: invert the default rather than prefix 126 sites.** Carry invariant 2
+into every Resolution rules block, and define `{video-path}` there for explicit
+use where a line would otherwise be ambiguous. This is 41 edits instead of 126,
+and it reduces tokens rather than adding them.
 
 Naming note: `{video-path}` over `{project-path}` deliberately, because
 `{project-root}` already means the repo working directory and the near-collision
