@@ -59,7 +59,7 @@ fps = 30
 # beats approval, and an offered final-quality render at gate 4. The editor
 # timeline export and all assets (edl.json, cutplan.md, overlays) are ALWAYS
 # produced alongside, so you can jump into your editor at any step. The
-# creator confirms this default during setup (step 3b).
+# creator confirms this default during setup.
 self-render = true
 # Preview render: small and fast, for iteration.
 preview-height = 720
@@ -153,7 +153,7 @@ image-provider = ""
 video-provider = ""
 escalation-provider = ""
 # Env var names for the metered API lanes. Ship blank, like
-# [defaults.transcription] api-key-env: mc-setup step 5 fills the vendor's
+# [defaults.transcription] api-key-env: tool registration fills the vendor's
 # key name only when you explicitly opt into that metered lane, and key
 # sourcing is discussed only inside that opt-in branch.
 xai-api-key-env = ""
