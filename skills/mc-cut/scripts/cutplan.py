@@ -167,7 +167,7 @@ DEFAULT_RESET_LOOK_S = 1.5
 #
 # This is a PACING knob and it is per-creator: a slower, more deliberate
 # delivery wants it higher, which is why the studio config exposes it through
-# [cut] cutplan_flags.
+# [cut] cutplan-flags.
 DEFAULT_MIN_SILENCE = 0.30
 
 HARD_FILLERS = {"um", "uh", "hmm", "er", "ah", "mm"}
@@ -764,7 +764,7 @@ def build(data, min_silence, retake_window, retake_run, marker_cues,
 
 
 # Arguments the SKILL owns and a configured flags string must never reach.
-# The skill appends [cut] cutplan_flags AFTER these, and argparse lets a later
+# The skill appends [cut] cutplan-flags AFTER these, and argparse lets a later
 # occurrence win, so without this the studio config could redirect the output
 # or, far worse, point --audio-map somewhere else and quietly break the
 # two-source rule the whole stage rests on. The config comment states the
@@ -792,7 +792,7 @@ def main(argv=None):
     if conflicts:
         print("cutplan: " + ", ".join(conflicts) + " supplied more than once. "
               "These are passed by the skill and must not be overridden from "
-              "cutplan_flags: redirecting the output or the audio map from a "
+              "cutplan-flags: redirecting the output or the audio map from a "
               "config file breaks the two-source rule silently.",
               file=sys.stderr)
         return 2

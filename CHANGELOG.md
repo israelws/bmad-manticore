@@ -115,7 +115,7 @@ Code-complete and unit-tested; still pending validation on real Windows and Linu
 
 - Run mc-setup against the existing studio. It detects the 0.x config and runs a delta interview: render consent, the video style interview, and the live-tool question, backfilling the `[render]`, `[style]`, `[cta]`, `[live]`, and `[audio]` studio-config tables from the shipped defaults, and scaffolding the Production Bible seeded from existing brand assets.
 - In-flight projects need no migration: beat tables without the new columns are accepted, and existing `cut/` artifacts remain valid.
-- If your recorded footage uses the old marker cue, set the cue at setup (mc-setup records it as a `--marker-cues` override in `cutplan_flags`, in the `[cut]` sub-table of the studio config) or pass `--marker-cues "question from claude"` directly.
+- If your recorded footage uses the old marker cue, set the cue at setup (mc-setup records it as a `--marker-cues` override in `cutplan-flags`, in the `[cut]` sub-table of the studio config) or pass `--marker-cues "question from claude"` directly.
 
 ### Headline features
 

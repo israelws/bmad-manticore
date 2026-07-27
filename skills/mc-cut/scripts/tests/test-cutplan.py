@@ -762,7 +762,7 @@ class TestExitCodes(unittest.TestCase):
 
 
 class TestProtectedFlags(unittest.TestCase):
-    """cutplan_flags is appended AFTER the skill's own arguments, and argparse
+    """cutplan-flags is appended AFTER the skill's own arguments, and argparse
     lets the later one win. Without this, an override file could point
     --audio-map elsewhere and break the two-source rule with no visible sign."""
 

@@ -37,7 +37,7 @@ exist in `{formats-path}` yet.
 ## Two things that moved
 
 Interview footage recorded against the pre-1.0 marker cue ("question from claude") still
-needs to segment. Offer the marker-cue question and record it as `cutplan_flags` in the
+needs to segment. Offer the marker-cue question and record it as `cutplan-flags` in the
 studio config's `[cut]` sub-table so cutplan keeps working on that footage.
 
 A pre-1.0 series or thumbnail template at the brand root (for example

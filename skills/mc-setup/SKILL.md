@@ -62,8 +62,8 @@ Walk the `[defaults]` tables from `{skill-root}/assets/studio-defaults.toml`, of
 
 - Video defaults: offer to ffprobe a recent recording and fill them from reality instead of asking the creator to recall numbers.
 - Speaking rate: leave the default and say mc-script will flag it as unmeasured. The voice bible measures it for real.
-- A non-default interview marker cue is not a key of its own. Record it as `cutplan_flags = '--marker-cues "<cue>"'` in the `[cut]` sub-table, edited surgically.
-- `[cut]`, `[packaging]` and `[retro]` are mechanical knobs rather than taste: write them from the defaults instead of interviewing them. The one worth raising is `[cut] silence_floor_db`, a property of the creator's room and mic; offer it when they mention a noisy room.
+- A non-default interview marker cue is not a key of its own. Record it as `cutplan-flags = '--marker-cues "<cue>"'` in the `[cut]` sub-table, edited surgically.
+- `[cut]`, `[packaging]` and `[retro]` are mechanical knobs rather than taste: write them from the defaults instead of interviewing them. The one worth raising is `[cut] silence-floor-db`, a property of the creator's room and mic; offer it when they mention a noisy room.
 
 **Render consent is performed, not assumed.** Before writing `[render]`, present the render-first default and get an explicit answer: Manticore previews every cut and beats iteration and offers a final at gate 4, while the timeline export and all assets are ALWAYS produced alongside, so the creator can move into their own editor at any step. Declining makes the renders offers instead of automatic outputs and changes nothing else. Offer the quality knobs only if asked.
 

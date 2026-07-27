@@ -207,7 +207,7 @@ davinci-resolve = false
 # analyze_audio's --map-granularity is deliberately not exposed: the
 # calibration record establishes it must stay finer than every consumer, so
 # it is a mechanic, not a knob.
-silence_floor_db = -30.0
+silence-floor-db = -30.0
 
 # Extra flags appended to the cutplan.py invocation. Empty means the script
 # defaults: min-silence 0.30, keep-ms 200, retake window 16, run 3,
@@ -238,7 +238,7 @@ silence_floor_db = -30.0
 #
 # Note: --audio-map and --voice-bible are passed by the SKILL (resolved
 # paths), not from this file.
-cutplan_flags = ""
+cutplan-flags = ""
 
 # ESCAPE HATCH for render flags the studio config does not model, e.g.
 # "--segment-target-seconds 300". Encoder settings have ONE home and it is not
@@ -248,8 +248,8 @@ cutplan_flags = ""
 # [render] owns here silently overrides it, and which value applies then
 # depends on emission order rather than on any stated rule. So do not put
 # --height, --crf, or the loudness flags in these.
-preview_flags = ""
-final_flags = ""
+preview-flags = ""
+final-flags = ""
 
 [defaults.packaging]
 
