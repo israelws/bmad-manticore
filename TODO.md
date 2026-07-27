@@ -22,24 +22,6 @@ Synthesized fixtures cannot prove real-model behavior, so before release run the
 - `analyze_audio.py` on the same take reports silence counts and totals in the expected range for its dead air (the reference take: about 400 intervals, about 300s).
 - A composited preview of a long 4K cut with many overlays completes in single-digit minutes and reports `"validated": true`.
 
-## Release gate: the genericity lint is red, maintainer decision pending
-
-Recorded 2026-07-26. `uv run skills/mc-setup/scripts/lint_genericity.py skills/ docs/ README.md CHANGELOG.md`
-exits 1 on five brand-term findings, all of them in `skills/mc-cut/references/editorial-pass.md`,
-where the editorial pass names the sibling BMad review skills it invokes. They are not
-user-, brand-, or show-specific content; the lint has no way to tell a real skill name from a
-dogfood reference. Two shapes, two fixes:
-
-- Four are the skill names `bmad-editorial-review-structure`, `bmad-editorial-review-prose`,
-  `bmad-review-adversarial-general` and `bmad-review-edge-case-hunter`. The pass invokes each by
-  name, so they belong in `DEFAULT_ALLOW_CONTEXTS` in `lint_genericity.py` beside the sibling
-  modules already listed there.
-- One is the bare word "BMad" in prose ("BMad already has the engines this needs"). No
-  allowed-context entry covers a bare mention, so that line reads better reworded than allowlisted.
-
-Allowlist or reword is the maintainer's call. Until it is made, CI is red on this file and every
-other lint claim in the repo has to be read as "no NEW findings" rather than "clean".
-
 ## 1.0.x fast-follows
 
 - Per-episode stream packs and the Ecamm lane (the named 1.0.x fast-follow): mc-stream-pack gains a pre-show per-episode pack lane (topic popups, CTAs, lower thirds mined from the episode plan before the show, delivered as switchable scenes) with the two-tier asset rule (evergreen chrome once into series `common/`, topic graphics per episode). The `[live]` tool key (obs, ecamm, other) already ships and is interviewed at setup; the OBS lane keeps HTML browser sources and WebM stingers; the Ecamm/other lane delivers baked PNG / ProRes 4444 alpha scene stills and loops, a ProRes stinger, a countdown safe-zone spec with a --guides render, and a tool-specific HANDOFF.md. Ecamm Live is macOS-only. Scheduled-livestream packaging (mc-package live-event mode, two-asset thumbnail rule) rides along.

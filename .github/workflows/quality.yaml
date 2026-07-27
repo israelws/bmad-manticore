@@ -3,7 +3,7 @@ name: Quality & Validation
 # Runs the module's own gates on every PR:
 # - every skill test suite (uv run, PEP 723; ffmpeg and chromium installed
 #   so the render and HTML-graphics suites exercise instead of skip)
-# - the genericity release gate (nothing user-, brand-, or show-specific ships)
+# Ship-hygiene rules are review rules, not lint: docs/review-rules.md.
 
 "on":
   pull_request:
@@ -42,5 +42,3 @@ jobs:
           done
           exit $fail
 
-      - name: Genericity release gate
-        run: uv run skills/mc-setup/scripts/lint_genericity.py skills/ docs/ README.md CHANGELOG.md

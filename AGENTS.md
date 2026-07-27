@@ -21,6 +21,8 @@ Taste lives in files. Mechanics live in scripts. Skills are thin routers between
 
 ## Conventions (binding when editing this module)
 
+Reviewers: [docs/review-rules.md](docs/review-rules.md) is the ship-hygiene checklist, checked by code review agents rather than any lint.
+
 - Nothing user-specific ships in the module. The creator's identity, brand, voice, paths, and tools live in their project via the studio config (`[modules.manticore]` in `_bmad/custom/config.toml`) and `{brand-path}`. If you find a personal name, brand color, or machine path in module content, that is a bug.
 - Config keys are kebab-case (`brand-path`). API keys never appear in the TOML or any file; only env var names.
 - A file that shapes the creator's output is theirs: it ships in `mc-setup/assets/` as the install source (`tokens.template.json`, `blacklist-starter.md`, `craft-checklist.md`, the two bible specs, the format profiles), mc-setup copies it into `{brand-path}` or `{formats-path}` on first run and never overwrites it after, and the consuming skill reads only the creator's copy. A template that shapes a pipeline artifact rather than the creator's taste stays module-owned in the skill that writes it: `mc-cut/assets/editorial-review-template.md` is the shape of `cut/editorial-review.md`, which mc-beats reads for its hand-to-beats seeds, so its sections are a downstream contract and it stays where it is (decided 2026-07-26).
