@@ -32,7 +32,6 @@ Reviewers: [docs/review-rules.md](docs/review-rules.md) is the ship-hygiene chec
 - Stubs carry their full I/O contract in the docstring and exit with a pointer to it.
 - Gates are sacred: no edit may let a stage proceed past a gate without the creator's recorded approval.
 - A check the pipeline claims to perform must be a script that exits non-zero. "Inspect X before proceeding" in a skill file is only acceptable next to a script that FAILS when X is wrong. This is the lesson of the 2026-07-24 cut-pipeline failures, where four separate defects shipped through the same hole: QC frames that were extracted but never asserted on, boundary frames eyeballed while the audio underneath was wrong, beat anchors that were a checklist line with no script, and a transcript nothing ever checked. Every one was documented and none could halt. Taste lives in files and mechanics live in scripts; an assertion is a mechanic, never a judgment call left to whoever is running the stage.
-- Docs style: no em-dashes, blank line after every heading, no bold in list items, ISO dates.
 
 ## Design invariants (settled decisions; change only with the maintainer's sign-off)
 

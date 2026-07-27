@@ -11,4 +11,3 @@ Checked by code review agents on every change; there is no lint for these. Judgm
 7. Every check the pipeline claims to perform is a script that exits non-zero; "inspect X" prose is only acceptable beside a script that fails when X is wrong.
 8. Gates are sacred: no change may let a stage proceed past a gate without the creator's recorded approval.
 9. Scripts run only via `uv run`, carry PEP 723 metadata, take explicit arguments, and do no config discovery of their own.
-10. Doc style: no em-dashes, blank line after every heading, no bold in list items, ISO dates.
