@@ -15,7 +15,40 @@ order rather than on any stated rule. So the flags strings are an escape hatch
 for what the config does not model, such as `--segment-target-seconds`. Never
 put `--height`, `--crf`, or the loudness flags in them.
 
-## Preview
+## The default is NOT to render
+
+Reviewing a cut does not need a rendered file. The virtual timeline plays the
+EDL directly — no encode, no wait, frame-exact, video and audio together:
+
+```
+uv run {skill-root}/scripts/render_preview.py cut/edl.json -o renders/preview.mp4 --proxy-only
+uv run {skill-root}/scripts/edl_to_ffconcat.py cut/edl.json -o cut/preview.ffconcat \
+    --source renders/proxy/<stem>-720p-intra.mp4
+ffplay -f concat -safe 0 -i cut/preview.ffconcat
+```
+
+`--proxy-only` builds the all-intra proxy and stops. Add `--mpv cut/preview.mpv.edl`
+to `edl_to_ffconcat.py` for creators who have mpv, which scrubs better.
+
+Measured on a 379-segment 16-minute cut: the timeline resolves in 33ms against
+22 minutes for the equivalent render, and was verified pixel-identical (PSNR
+inf) to source ground truth at four points including random seeks.
+
+**The all-intra proxy is a correctness precondition, not an optimisation.** The
+concat demuxer can only cut on keyframes. Against a long-GOP proxy (8.333s GOP
+vs segments averaging 2.51s) every segment starts up to 8.3s early while the
+total duration still matches the EDL exactly — a wrong cut that passes every
+check except a frame comparison. `edl_to_ffconcat.py` refuses a non-intra
+source unless you pass `--allow-long-gop`.
+
+The proxy costs ~10x the disk of a long-GOP one (698MB vs 65MB for 20 minutes
+at 720p) and is built once per source, then reused by every later preview and
+render.
+
+## Preview file, when you actually need a file
+
+Only when something needs to be a file: a composited preview once overlays
+exist, something to upload or share, or the gate-4 final.
 
 ```
 uv run {skill-root}/scripts/render_preview.py cut/edl.json \
@@ -25,6 +58,15 @@ uv run {skill-root}/scripts/render_preview.py cut/edl.json \
 
 Defaults to 720p CRF 28 when `[render]` leaves them unset. Never
 loudness-normalized. Check `"validated": true` in the summary.
+
+This path re-encodes. A concat stream copy off the intra proxy is ~470x faster
+(2.8s vs 22min measured) and is genuinely the same frames, but it emits
+duplicate DTS wherever a segment runs only a frame or two, and the file then
+fails this script's own decode validation — 125 errors on that cut, and 3 with
+every timestamp remedy applied, never zero, from just 2 sub-0.1s segments.
+`composite_core.build_streamcopy_command` keeps it, tested, for a caller that
+wants a scratch file and accepts the caveat. It is not the review path because
+the virtual timeline is faster AND correct.
 
 Composited, once the graphics stage has rendered overlays into `graphics/`, add:
 

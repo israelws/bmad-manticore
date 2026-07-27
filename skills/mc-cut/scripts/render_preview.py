@@ -103,7 +103,7 @@ probe_duration = core.probe_duration
 extract_boundary_frames = core.extract_boundary_frames
 
 
-def ensure_proxies(sources, project_dir, proxy_dir, height):
+def ensure_proxies(sources, project_dir, proxy_dir, height, intra=True):
     """Build (or reuse) a preview proxy per source. Returns {source: rel_path}.
 
     A proxy is one linear transcode of the whole source to the preview
@@ -122,7 +122,7 @@ def ensure_proxies(sources, project_dir, proxy_dir, height):
         abs_src = project_dir / src
         if not abs_src.is_file():
             continue
-        proxy = core.proxy_path(proxy_dir, src, height)
+        proxy = core.proxy_path(proxy_dir, src, height, intra=intra)
         if not core.proxy_is_fresh(proxy, abs_src):
             print(f"render_preview: building {height}p proxy for {src} "
                   "(once; reused by every later preview)", file=sys.stderr)
@@ -132,7 +132,8 @@ def ensure_proxies(sources, project_dir, proxy_dir, height):
             # hand each other a corrupt proxy. Same failure the deliverable
             # path had; it deserves the same defence.
             staged = core.temp_render_path(proxy, "proxy")
-            cmd = core.build_proxy_command(abs_src, staged, height)
+            cmd = core.build_proxy_command(abs_src, staged, height,
+                                           intra=intra)
             proc = subprocess.run(cmd, capture_output=True, text=True)
             if proc.returncode != 0:
                 core.discard_render(staged)
@@ -196,6 +197,10 @@ def main(argv=None):
                         help="beats/beats.md to composite graphics from")
     parser.add_argument("--graphics-dir", default=None,
                         help="dir holding one rendered overlay per beat id")
+    parser.add_argument("--proxy-only", action="store_true",
+                        help="build (or reuse) the all-intra proxies and "
+                             "exit without rendering. The virtual timeline "
+                             "at gate 2 needs the proxy but not a render.")
     parser.add_argument("--no-proxy", action="store_true",
                         help="cut from the masters instead of building "
                              "preview proxies (slower on 4K sources)")
@@ -268,6 +273,11 @@ def main(argv=None):
                      else output.parent / "proxy")
         proxy_map = ensure_proxies(distinct, project_dir, proxy_dir,
                                    args.height)
+    if args.proxy_only:
+        print(json.dumps({"ok": True, "mode": "proxy-only",
+                          "proxies": {k: str(v) for k, v in
+                                      proxy_map.items()}}, indent=2))
+        return 0
     render_edl = core.proxied_edl(edl, proxy_map) if proxy_map else edl
 
     # One target frame is needed to scale overlays and to normalize mixed-size
@@ -299,7 +309,20 @@ def main(argv=None):
                                        dir=str(output.parent))
     try:
         if not overlays:
-            # No graphics yet: one pass, exactly as before.
+            # No graphics: one pass. This path re-encodes, and that is
+            # deliberate. A concat-demuxer STREAM COPY off the all-intra
+            # proxy is ~470x faster (2.8s vs 22min on a 379-segment cut), but
+            # it emits duplicate DTS wherever a segment is only a frame or
+            # two long, and the resulting file fails this script's own decode
+            # validation. Flags (+genpts, avoid_negative_ts, timescale,
+            # fps_mode) take a 379-segment cut from 125 errors to 3, never to
+            # zero. Weakening the validation gate to publish it would be
+            # trading a real correctness check for a speed number.
+            #
+            # The speed is not lost, it just belongs elsewhere: gate 2 review
+            # runs on the VIRTUAL TIMELINE (edl_to_ffconcat.py), which needs
+            # no mux at all and is verified frame-exact. Render a file only
+            # when you need a file.
             cmd, _ = build_command(render_edl, project_dir, tmp, args.height,
                                    target=target, audio_map=audio_map)
             proc = subprocess.run(cmd, capture_output=True, text=True)
@@ -309,10 +332,12 @@ def main(argv=None):
                 print(" ".join(cmd), file=sys.stderr)
                 print(proc.stderr.strip()[-2000:], file=sys.stderr)
                 return 1
+            lane_mode = "encode"
         else:
             # Overlay lanes: build the base cut, pack the overlays into the
             # fewest non-overlapping lanes, then stack only the lanes. Depth
             # is max-concurrent-overlays, not overlay count.
+            lane_mode = "encode"
             base = Path(work.name) / "base.mp4"
             cmd, _ = build_command(render_edl, project_dir, base, args.height,
                                    target=target, audio_map=audio_map)
@@ -387,6 +412,7 @@ def main(argv=None):
         "validated": True,
         "render_key": key,
         "proxied_sources": len(proxy_map),
+        "lane": lane_mode,
         "boundary_frames": boundary_count,
         "output": str(output.resolve()),
     }

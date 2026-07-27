@@ -433,13 +433,56 @@ class TestLaneCommands(unittest.TestCase):
 
 
 class TestProxies(unittest.TestCase):
-    def test_proxy_path_is_named_by_stem_and_height(self):
+    def test_proxy_path_is_named_by_stem_height_and_family(self):
         p = core.proxy_path("/p/renders/proxy", "raw/cam.mp4", 720)
-        self.assertEqual(p.name, "cam-720p.mp4")
+        self.assertEqual(p.name, "cam-720p-intra.mp4")
+
+    def test_long_gop_proxy_gets_a_distinct_path(self):
+        """An all-intra proxy must never collide with a long-GOP one: the
+        stream-copy lane is silently wrong against long-GOP."""
+        intra = core.proxy_path("/p", "raw/cam.mp4", 720, intra=True)
+        longgop = core.proxy_path("/p", "raw/cam.mp4", 720, intra=False)
+        self.assertNotEqual(intra.name, longgop.name)
 
     def test_proxy_command_scales_to_the_height(self):
         cmd = core.build_proxy_command("in.mp4", "out.mp4", 720)
         self.assertIn("scale=-2:720", cmd)
+
+    def test_proxy_command_is_all_intra_by_default(self):
+        """-g 1 alone is not enough: x264 scenecut detection would still
+        insert its own keyframes and keyint_min governs the minimum."""
+        cmd = core.build_proxy_command("in.mp4", "out.mp4", 720)
+        for flag, val in (("-g", "1"), ("-keyint_min", "1"),
+                          ("-sc_threshold", "0")):
+            self.assertIn(flag, cmd)
+            self.assertEqual(cmd[cmd.index(flag) + 1], val)
+
+    def test_proxy_command_can_opt_out_of_intra(self):
+        cmd = core.build_proxy_command("in.mp4", "out.mp4", 720, intra=False)
+        self.assertNotIn("-sc_threshold", cmd)
+
+    def test_streamcopy_command_never_encodes(self):
+        cmd = core.build_streamcopy_command("t.ffconcat", "o.mp4")
+        self.assertIn("-c", cmd)
+        self.assertEqual(cmd[cmd.index("-c") + 1], "copy")
+        self.assertNotIn("-filter_complex", cmd)
+        self.assertIn("concat", cmd)
+
+    def test_a_proxy_from_an_older_recipe_is_stale(self):
+        """A sidecar with no recipe line predates the intra lane. Reusing it
+        would feed the stream-copy lane a long-GOP proxy: right duration,
+        wrong frames."""
+        import tempfile
+        from pathlib import Path as _P
+        with tempfile.TemporaryDirectory() as d:
+            src = _P(d) / "s.mp4"; src.write_bytes(b"x" * 64)
+            proxy = _P(d) / "p.mp4"; proxy.write_bytes(b"y" * 64)
+            # old-format sidecar: digest only, no recipe
+            proxy.with_name("p.mp4.src").write_text(
+                core.content_digest(src, cheap=True) + "\n")
+            self.assertFalse(core.proxy_is_fresh(proxy, src))
+            core.write_proxy_sidecar(proxy, src)
+            self.assertTrue(core.proxy_is_fresh(proxy, src))
 
     def test_missing_proxy_is_not_fresh(self):
         self.assertFalse(core.proxy_is_fresh("/nope/p.mp4", "/nope/s.mp4"))
@@ -566,7 +609,7 @@ class TestLanePreviewEndToEnd(unittest.TestCase):
     def test_a_proxy_was_built_and_is_reused(self):
         self.assertEqual(self.summary["proxied_sources"], 1)
         self.assertTrue((self.proj / "renders" / "proxy" /
-                         "cam-180p.mp4").is_file())
+                         "cam-180p-intra.mp4").is_file())
 
     def test_audio_survives_the_lane_composite(self):
         self.assertTrue(core.probe_has_audio(self.out))

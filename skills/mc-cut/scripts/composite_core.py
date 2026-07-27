@@ -360,50 +360,140 @@ def build_lane_composite_command(base, lane_files, output, crf=28,
     return argv
 
 
-def proxy_path(proxy_dir, source, height):
+def proxy_path(proxy_dir, source, height, intra=True):
     """Where a source's preview proxy lives (pure).
 
-    Named by the source stem plus height so a project's proxies are readable
-    on disk; freshness is decided by the sidecar digest, not the name.
+    Named by the source stem, height and encode family so a project's proxies
+    are readable on disk AND an all-intra proxy can never collide with a
+    long-GOP one built by an older version. Freshness is still decided by the
+    sidecar, not the name.
     """
-    return Path(proxy_dir) / f"{Path(source).stem}-{height}p.mp4"
+    suffix = "-intra" if intra else ""
+    return Path(proxy_dir) / f"{Path(source).stem}-{height}p{suffix}.mp4"
 
 
-def proxy_is_fresh(proxy, source):
-    """True when a proxy exists and was built from this exact source (pure-ish).
+def proxy_is_fresh(proxy, source, recipe=None):
+    """True when this proxy was built from this source UNDER THIS RECIPE.
 
     The sidecar records the source's content digest at build time, so a
     re-recorded take with the same filename correctly invalidates its proxy.
+
+    It also records the proxy RECIPE, because content is only half of
+    freshness: a proxy built by an older version is long-GOP, and the stream
+    copy lane is silently WRONG against it (right duration, wrong frames). A
+    sidecar with no recipe line predates the intra lane and is therefore
+    stale by definition.
     """
+    recipe = PROXY_RECIPE if recipe is None else recipe
     proxy = Path(proxy)
     sidecar = proxy.with_name(proxy.name + ".src")
     if not proxy.is_file() or not sidecar.is_file():
         return False
     try:
-        return sidecar.read_text(encoding="utf-8").strip() == \
-            content_digest(source, cheap=True)
+        lines = sidecar.read_text(encoding="utf-8").splitlines()
     except OSError:
         return False
+    if not lines:
+        return False
+    if lines[0].strip() != content_digest(source, cheap=True):
+        return False
+    stored = lines[1].strip() if len(lines) > 1 else ""
+    return stored == recipe
 
 
-def build_proxy_command(source, out, height, crf=26, preset="veryfast"):
+# The proxy recipe. Bumping this string invalidates every existing proxy via
+# the sidecar, which is what you want whenever the encode settings change:
+# a proxy built under an older recipe is silently wrong for the current one.
+PROXY_RECIPE = "intra-v1"
+
+
+def build_proxy_command(source, out, height, crf=26, preset="veryfast",
+                        intra=True):
     """ffmpeg argv transcoding a source to a preview proxy (pure).
 
     One linear pass. Audio is re-encoded rather than copied so the proxy is
     seekable and self-contained; the preview's audio comes from here too, and
     the final render never touches proxies.
+
+    ALL-INTRA (intra=True, the default) is what makes the fast preview lane
+    possible, and it is not an optimisation detail -- it is a correctness
+    precondition:
+
+    - Every frame is a keyframe, so the concat demuxer's inpoint/outpoint are
+      frame-exact. Against a long-GOP proxy they are NOT: measured at an
+      8.333s GOP against segments averaging 2.51s, every segment began up to
+      8.3s early while total duration still matched the EDL exactly, so the
+      wrong cut looked right in every check except a frame comparison.
+    - Because every cut lands on a keyframe by definition, the preview can be
+      a STREAM COPY instead of a re-encode. Measured on a 379-segment 16-min
+      cut: 22 minutes of filter_complex re-encode became 2.8 seconds of
+      remux, at 340x realtime.
+
+    The cost is disk: all-intra 720p runs roughly 10x a long-GOP proxy (698MB
+    vs 65MB for 20 minutes). That is the trade this lane makes deliberately --
+    the proxy is built once per source and reused by every later preview,
+    while the re-encode was paid on every single iteration.
     """
-    return ["ffmpeg", "-y", "-hide_banner", "-v", "error", "-i", str(source),
-            "-vf", f"scale=-2:{height}", "-c:v", "libx264", "-preset", preset,
-            "-crf", str(crf), "-pix_fmt", "yuv420p", "-c:a", "aac",
-            "-b:a", "160k", "-movflags", "+faststart", str(out)]
+    cmd = ["ffmpeg", "-y", "-hide_banner", "-v", "error", "-i", str(source),
+           "-vf", f"scale=-2:{height}", "-c:v", "libx264", "-preset", preset,
+           "-crf", str(crf), "-pix_fmt", "yuv420p"]
+    if intra:
+        # -g 1 alone is not enough: x264 can still emit non-IDR frames, and
+        # scenecut detection inserts its own keyframes on top. All three
+        # together give exactly one I-frame per frame.
+        cmd += ["-g", "1", "-keyint_min", "1", "-sc_threshold", "0"]
+    cmd += ["-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart",
+            str(out)]
+    return cmd
 
 
-def write_proxy_sidecar(proxy, source):
-    """Record which source build this proxy, for proxy_is_fresh."""
+def build_streamcopy_command(concat_file, out):
+    """ffmpeg argv remuxing an ffconcat virtual timeline into a file (pure).
+
+    No filtergraph and no encoder: the segments are cut on keyframes so their
+    packets are copied straight through. Valid ONLY against an all-intra
+    source (see build_proxy_command) and ONLY when nothing needs compositing
+    -- an overlay changes pixels, which forces a re-encode.
+
+    The EDL's fade_ms is deliberately not applied here. Audio fades exist to
+    stop a click when a cut lands mid-waveform, and verify_edl already
+    guarantees every boundary rests in audio-verified silence, so there is no
+    discontinuity for a fade to hide. Measured across 8 random joins on a
+    379-segment cut: unfaded peaks ran -31 to -44 dB against speech peaking
+    at -9 dB, and tracked the faded render within 0.5 dB on most joins. If a
+    future format ever cuts outside silence, this assumption dies with it.
+
+    NOT WIRED INTO render_preview, and the reason is worth keeping:
+        This is ~470x faster than the encode (2.8s vs 22min measured on a
+        379-segment 16-minute cut, 340x realtime) and it is genuinely the
+        same frames. But the concat demuxer emits DUPLICATE DTS wherever a
+        segment runs only a frame or two, and the resulting file fails
+        render_preview's decode validation. On that same cut: 125 decode
+        errors plain, and 3 with every timestamp remedy tried (+genpts,
+        avoid_negative_ts make_zero, video_track_timescale 30000, fps_mode
+        passthrough, muxdelay 0). Never zero. Only 2 of 379 segments were
+        under 0.1s, which is all it takes.
+
+        Publishing that file would mean loosening a correctness gate to buy a
+        speed number, so the speed moved instead of the gate: gate 2 review
+        runs on the virtual timeline (edl_to_ffconcat.py), which is never
+        muxed and therefore cannot have this problem, and which verifies
+        frame-exact. Kept here, tested, and available for a caller that wants
+        a scratch file and accepts the caveat.
+    """
+    return ["ffmpeg", "-y", "-hide_banner", "-v", "error",
+            "-f", "concat", "-safe", "0", "-i", str(concat_file),
+            "-c", "copy", "-movflags", "+faststart", str(out)]
+
+
+def write_proxy_sidecar(proxy, source, recipe=None):
+    """Record which source and which recipe built this proxy, for
+    proxy_is_fresh. Line 1 is the source digest, line 2 the recipe."""
+    recipe = PROXY_RECIPE if recipe is None else recipe
     proxy = Path(proxy)
     proxy.with_name(proxy.name + ".src").write_text(
-        content_digest(source, cheap=True) + "\n", encoding="utf-8")
+        content_digest(source, cheap=True) + "\n" + recipe + "\n",
+        encoding="utf-8")
 
 
 def proxied_edl(edl, mapping):

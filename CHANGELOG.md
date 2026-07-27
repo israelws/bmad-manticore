@@ -2,6 +2,35 @@
 
 All notable changes to BMad Manticore are documented here. Dates are ISO (YYYY-MM-DD).
 
+## 3.1.0 - Unreleased
+
+Reviewing a cut no longer means waiting for a render. Everything here came out of one real 20-minute 4K project whose gate-2 preview took 22 minutes to encode — twice, because the first one failed validation at the finish line.
+
+### You do not render a file to review a cut any more
+
+- New `edl_to_ffconcat.py` writes the EDL as a **virtual timeline** — an ffconcat playlist (and optionally an mpv EDL) that plays the cut with no encode at all: `ffplay -f concat -safe 0 -i cut/preview.ffconcat`. On a 379-segment 16-minute cut the timeline resolves in 33ms against 22 minutes for the equivalent render, and was verified pixel-identical (PSNR inf) to source ground truth at four points including random seeks. It carries video and audio together, so A/V sync is reviewable — which an audio-only preview cannot show.
+- mc-cut now builds the virtual timeline at gate 2 and does **not** render a preview file. Rendering a full preview before the creator has approved a single call was the most expensive habit the stage had. A file gets rendered when something actually needs a file: a composited preview once overlays exist, something to share, or the gate-4 final.
+- `render_preview.py --proxy-only` builds the proxy and exits, so the timeline can be built without a render.
+
+### Preview proxies are all-intra, and that is a correctness fix
+
+- `build_proxy_command` now encodes proxies all-intra (`-g 1 -keyint_min 1 -sc_threshold 0`). This is not a speed tweak: the concat demuxer can only cut on keyframes, so against a long-GOP proxy the virtual timeline silently plays the WRONG frames while still reporting the exact right duration. Measured at an 8.333s GOP against segments averaging 2.51s (163 of 379 under 2s), every segment began up to 8.3s early — a wrong cut that passes every check except a frame comparison. `edl_to_ffconcat.py` refuses a non-intra source unless you pass `--allow-long-gop`.
+- Proxy paths carry the encode family (`<stem>-720p-intra.mp4`) and sidecars now record a recipe, so a proxy built by an older version can never be reused as if it were intra. A sidecar with no recipe line is stale by definition.
+- The cost is disk: roughly 10x a long-GOP proxy (698MB vs 65MB for 20 minutes at 720p), built once per source and reused by every later preview and render.
+
+### Two EDL bugs that only appear on long cuts
+
+- **EDL boundaries must be quantized to the source frame grid.** They come from the audio map at 0.1s granularity and from word timestamps, so they are sub-frame by default; ffmpeg rounds each `trim` to the nearest frame and the error accumulates. A 379-segment cut rendered 954.766s against an expected 952.460s and the output gate correctly refused to publish it — the cut was fine, only the arithmetic disagreed. Past roughly 150 segments this happens every time. Now a cutting rule, with the tail-clamp for boundaries that round past `source_duration`.
+- **A trailing silence must be truncated, not tightened.** Tightening the final silence at both ends like an interior gap leaves a junk segment scraped off the absolute end of the file, past the last detected silence and past `source_duration` once frame-aligned. Now a cutting rule: end the final segment on a real tail inside the verified silence.
+
+### Applying approved cuts invalidates everything downstream, loudly
+
+- New section in mc-cut spelling out that the moment `cut/edl.json` is rewritten, every derived artifact is stale — the virtual timeline, the FCPXML, the edited transcript, the preview, the boundary frames, and **every beat anchor in `beats/beats.md`**. Nothing on disk announces this: a stale FCPXML imports cleanly and a stale beat table renders overlays that land off their phrase, discovered after the graphics are paid for. The regeneration order is now explicit, `verify_edl.py` runs first and its non-zero exit stops the rest, and when a beat table already exists the anchor check must re-run and be reported before graphics continue.
+
+### Not shipped, and why
+
+- A concat-demuxer **stream copy** off the intra proxy renders the same frames ~470x faster (2.8s vs 22min, 340x realtime). It is not the preview path: it emits duplicate DTS wherever a segment runs only a frame or two, and the file then fails `render_preview.py`'s own decode validation — 125 errors on that cut, and 3 with every timestamp remedy applied (`+genpts`, `avoid_negative_ts`, `video_track_timescale`, `fps_mode passthrough`, `muxdelay 0`), never zero, from just 2 sub-0.1s segments. Publishing it would mean loosening a correctness gate to buy a speed number. `composite_core.build_streamcopy_command` keeps it, tested and documented, for a caller that wants a scratch file and accepts the caveat. The speed moved to the virtual timeline instead, which is both faster and correct.
+
 ## 3.0.0 - Unreleased
 
 The big release: one motion-graphics engine with the full HyperFrames toolkit behind it, cross-platform support, a final render that only re-does what changed, delivery polish (loudness, captions, OBS alpha), and a cut stage rebuilt from the ground up after its first real project. Upgrading from 1.x is a clean reinstall (see README): your brand, voice bible, and format profiles live in your studio folder, not in `_bmad/`, so they survive and onboarding picks them back up.
