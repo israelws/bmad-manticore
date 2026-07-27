@@ -109,8 +109,8 @@ import time
 from collections import deque
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import composite_core as core
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # noqa: E402
+import composite_core as core  # noqa: E402
 
 # loudnorm companions to the integrated target: true peak ceiling and
 # loudness range, the common VOD-delivery pairing for a -14 LUFS target.
@@ -545,21 +545,60 @@ def main(argv=None):
 
     # Losslessly concat the (cached + fresh) video segments, then mux the
     # whole-program audio in. Both stream-copied, no re-encode.
+    #
+    # Everything from here lands on a per-process temp deliverable, never on
+    # the output path itself. The deliverable is only published once it has
+    # decode-validated and proven it is not superseded; see the "render
+    # identity, atomic publish, output validation" block in composite_core.
+    publish_params = {"height": out_h, "mode": "final",
+                      "codec": args.codec, "crf": args.crf,
+                      "loudnorm": (None if args.no_loudnorm
+                                   else args.loudness_target)}
+    ffmpeg_v = core.ffmpeg_version()
+    publish_key = core.render_key(edl, publish_params, overlay_digests,
+                                  ffmpeg_v)
+    deliverable = core.temp_render_path(output, publish_key)
+
     video_tmp = output.parent / f".{output.stem}-video.mp4"
     ok = concat_video([item["file"] for item in plan], video_tmp)
     if ok:
-        ok = mux_av(video_tmp, audio_tmp, output)
+        ok = mux_av(video_tmp, audio_tmp, deliverable)
     if not args.keep_temp:
         video_tmp.unlink(missing_ok=True)
         audio_tmp.unlink(missing_ok=True)
     if not ok:
+        core.discard_render(deliverable)
         return 1
 
     loudnorm = None
     if not args.no_loudnorm:
-        loudnorm = run_loudnorm(output, args.loudness_target)
+        loudnorm = run_loudnorm(deliverable, args.loudness_target)
         if loudnorm is None:
+            core.discard_render(deliverable)
             return 1
+
+    valid, problems = core.validate_render(deliverable, total)
+    if not valid:
+        core.discard_render(deliverable)
+        print("render failed validation, output NOT published:",
+              file=sys.stderr)
+        for p in problems:
+            print(f"  {p}", file=sys.stderr)
+        return 1
+
+    live_key = core.current_render_key(edl_path, publish_params,
+                                       overlay_digests, ffmpeg_v)
+    if live_key is not None and live_key != publish_key:
+        core.discard_render(deliverable)
+        print(json.dumps({"superseded": True, "rendered_key": publish_key,
+                          "current_key": live_key,
+                          "output": str(output.resolve())}, indent=2))
+        print(f"SUPERSEDED: {edl_path.name} changed while this render ran; "
+              "discarded it instead of overwriting a newer render. Re-run "
+              "against the current EDL.", file=sys.stderr)
+        return 1
+
+    core.publish_render(deliverable, output, publish_key)
 
     actual = core.probe_duration(output)
 

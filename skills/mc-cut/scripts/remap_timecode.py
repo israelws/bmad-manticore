@@ -61,8 +61,8 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from composite_core import format_timecode, parse_timecode
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # noqa: E402
+from composite_core import format_timecode, parse_timecode  # noqa: E402
 
 TC_RE = re.compile(r"(?<![\d:.])(?:\d+:)?\d{1,4}:\d{2}(?:\.\d+)?(?![\d:])")
 

@@ -54,10 +54,6 @@ Farms the stills and b-roll the beat table calls for through the creator's regis
 
 Service skill, no stage or gate: farms sound the way mc-assets farms pictures. Local-first: Kokoro-82M narration and two-host dialogue (stock voices, no cloning), MusicGen-small instrumental beds, AudioLDM2 SFX (16 kHz). Song-with-vocals lane is planned, not implemented; paid lanes opt-in. Called from mc-graphics, mc-stream-pack, and voiceover narration, or directly when the creator asks for sound. First use may build the engine workspace (large downloads, always consented).
 
-### mc-ograf
-
-Service skill: OGraf broadcast graphics that stay editable, only where the target supports them (DaVinci Resolve 21+ via `[editor] ograf-editable`, or the OBS/SPX-GC live lane). Everyone else gets baked alpha, which works everywhere.
-
 ## Packaging and live
 
 ### mc-package

@@ -1,6 +1,6 @@
 # Linux default stack
 
-Selected when check_deps.py reports os Linux. The GPU verdict (nvidia, amd, intel, none, unknown) splits the transcription extra and the encoder ladder. Research basis: platform and capabilities audit, 2026-07-21.
+Selected when check_deps.py reports os Linux. The GPU verdict (nvidia, amd, intel, none, unknown) splits the transcription extra and the encoder ladder.
 
 ## Default stack
 

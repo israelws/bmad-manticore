@@ -2,7 +2,7 @@
 
 # BMad Manticore
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](.claude-plugin/marketplace.json)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue)](.claude-plugin/marketplace.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-%3E%3D3.11-blue?logo=python&logoColor=white)](https://www.python.org)
 [![uv](https://img.shields.io/badge/uv-package%20manager-blueviolet?logo=uv)](https://docs.astral.sh/uv/)
@@ -10,9 +10,9 @@
 
 **From brain dump to a rendered, graphics-rich video, in your own words.**
 
-## New in 2.0
+## New in 3.0
 
-Manticore now runs entirely on [HyperFrames](https://hyperframes.heygen.com) for motion graphics, with its Agent Skills installed and favored at setup so the agent can reach the whole toolkit: color grading, background removal, WebGL shader transitions, kinetic captions, data-viz, 3D device mockups, HDR and 4K delivery, and a 100-plus block catalog. It all runs locally, with no account or credits. Remotion is retired; its license and React model no longer fit a frame-deterministic pipeline. The final render is now incremental too (a fix on a long video re-renders in seconds, not minutes), finals are loudness-normalized by default, and Windows, Linux, and Intel Mac lanes are code-complete. See the [changelog](CHANGELOG.md) for everything that changed.
+Motion graphics run entirely on [HyperFrames](https://hyperframes.heygen.com), with its Agent Skills installed and favored at setup so the agent can reach the whole toolkit: color grading, background removal, WebGL shader transitions, kinetic captions, data-viz, 3D device mockups, HDR and 4K delivery, and a 100-plus block catalog. It all runs locally, with no account or credits. The final render is incremental (a fix on a long video re-renders in seconds, not minutes), finals are loudness-normalized by default, and Windows, Linux, and Intel Mac lanes are code-complete. The cut stage was rebuilt after its first real 4K project: transcription windows in short isolated passes and is verified for completeness before anything consumes it, cut timing comes from an audio silence map rather than transcript timestamps, renders validate and move into place atomically instead of writing their output path directly, and an editorial pass reads the edited transcript against the brief before gate 2. See the [changelog](CHANGELOG.md) for everything that changed and why.
 
 Upgrading from an earlier version: back up anything custom you want to keep, then remove the `_bmad/` and `_bmad-output/` folders from your studio and reinstall (see [Install](#install)). Start your agent and say `hey manny lets get this all set up!`, then follow onboarding. Your brand kit, voice bible, and format profiles live in your studio folder (not in `_bmad/`), so they survive the reinstall: onboarding finds them, and if it does not, point it at them so it can reuse or update them.
 
@@ -57,10 +57,10 @@ my-studio/                        <- install here, run everything from here
   _bmad/custom/config.toml        <- studio config ([modules.manticore]; mc-setup writes it)
   manticore/
     brand/      <- tokens.json, production-bible.md, voice-bible.md, blacklist.md,
-                   exemplars/, headshots/
+                   craft-checklist.md, exemplars/, headshots/
     formats/    <- your editable format profiles (learnings accumulate here)
     projects/   <- one folder per video, fully self-contained
-    engines/    <- HyperFrames / OGraf workspaces
+    engines/    <- HyperFrames workspaces
 ```
 
 Then say "talk to Manny". Manny the Manticore (mc-agent) is the studio's director and front door: he detects that the studio is not set up yet and walks you through mc-setup's onboarding interview (identity, editor, render consent, video style, brand, headshots, voice bible, tools), turns your first idea into a project, routes existing footage into a footage-first project, and drives every stage from there. You never have to know which skill does what.
@@ -96,7 +96,6 @@ Manticore orchestrates tools; it does not replace them. The defaults are local a
 | Kokoro-82M (kokoro-onnx) | TTS narration and two-host dialogue for the mc-audio lane (stock voices, no cloning) | Free, local, faster than realtime on CPU |
 | MusicGen-small + AudioLDM2 | Instrumental music beds and SFX, farmed locally by mc-audio | Free, local, ungated models |
 | HyperFrames | Motion graphics engine for overlay beats, stingers, and karaoke captions | Free, local, Apache 2.0, no commercial-use threshold |
-| OGraf + SPX-GC / OBS | Broadcast graphics that stay editable in DaVinci Resolve 21+ and click-to-trigger live in OBS | Free |
 | yt-dlp | Pulls your back-catalog transcripts to build your voice bible | Free |
 | Grok CLI (xAI), opt-in | Imagine stills and image-to-video b-roll clips with native audio, plus X/Twitter research and posting, from the terminal | Covered by a SuperGrok / X Premium+ subscription; a metered xAI API lane exists only as an explicit opt-in |
 | Antigravity CLI `agy` (Google), opt-in | Gemini image generation on your plan quota | Subscription-inclusive |
@@ -122,7 +121,7 @@ Seven ship by default: talking-head, screen-tutorial (real UI only, generated b-
 
 ## The skills
 
-16 skills, each self-contained: a skill ships its own defaults (`customize.toml`), scripts, and knowledge, and reads only its own folder, the installed BMad core scripts, and your project files.
+15 skills, each self-contained: a skill ships its own scripts and knowledge, and reads only its own folder, the installed BMad core scripts, and your project files.
 
 | Skill | What it does |
 |---|---|
@@ -136,7 +135,6 @@ Seven ship by default: talking-head, screen-tutorial (real UI only, generated b-
 | mc-cut | Word-level transcript, cut plan with taste calls (gate 2), edl.json, preview render every iteration, timeline export, the offered final render |
 | mc-beats | The graphics beat table anchored to spoken words, under creativity mandates and your density tier, with a CTA placement pass (gate 3) |
 | mc-graphics | Execute beats in HyperFrames / HTML / design-prompting; frame-verified alpha overlays |
-| mc-ograf | Editable broadcast graphics (DaVinci Resolve 21+ and OBS/SPX-GC) |
 | mc-assets | Farm b-roll stills/clips via your registered CLI tools (metered APIs opt-in), under generative-editing safety rules |
 | mc-audio | Farm sound, local-first: TTS narration and two-host dialogue (Kokoro-82M), instrumental beds (MusicGen-small), SFX (AudioLDM2); paid lanes opt-in |
 | mc-package | Titles, thumbnails (verified at 120px), description, chapters, SRT/VTT captions and transcript, series A/B pairs, live-event mode |
@@ -149,10 +147,10 @@ Taste lives in files (your voice bible, Production Bible, format profiles, brand
 
 ## Status
 
-2.0.0 is shaped by real production use. Honest state as of 2026-07-23:
+3.0.0 is shaped by real production use. Honest state as of 2026-07-23:
 
 - Proven in production: the full cut lane (parakeet-mlx word-level transcription validated on real footage, cut candidate detection, edl.json, FCPXML export, preview render with boundary-frame verification), Manny as the front door, setup and dependency checking, config resolution, project scaffolding, the render lane (composited preview and the offered final render), the expanded setup interview, the Production Bible, creativity mandates and the CTA system, footage-first ingest, series support, the graphics toolkit, CLI-registry asset farming, the OBS stream pack, the mc-audio local sound lanes (validated end to end on Apple Silicon), and the retro loop.
-- New in 2.0, implemented and unit-tested, with the least real-project mileage: HyperFrames as the sole motion-graphics engine with its Agent Skills installed at setup, the incremental content-addressed final render, default -14 LUFS loudness normalization, and the cross-platform stack (onnx-asr transcription and the per-OS hardware-encoder ladders on Windows, Linux, and Intel Mac) — code-complete and covered by tests, but treat the first run on non-Apple-Silicon hardware as a shakedown.
+- New in 3.0, implemented and unit-tested, with the least real-project mileage: HyperFrames as the sole motion-graphics engine with its Agent Skills installed at setup, the incremental content-addressed final render, default -14 LUFS loudness normalization, and the cross-platform stack (onnx-asr transcription and the per-OS hardware-encoder ladders on Windows, Linux, and Intel Mac) — code-complete and covered by tests, but treat the first run on non-Apple-Silicon hardware as a shakedown.
 - The writing lane (braindump, outline, script) is the core promise and is wired end to end with live blacklist linting; it has had the least real-video exercise of the core stages, so treat your first run through it as a shakedown and feed mc-retro afterward.
 - Planned: Premiere (xmeml) and CMX3600 EDL export lanes, per-episode stream packs with the Ecamm target (the named 1.0.x fast-follow), multitrack recording support, the remaining audio lanes (full songs with vocals, plus the paid opt-in rungs of the audio ladder), and a research/show-prep skill. See [TODO.md](TODO.md) for the full roadmap.
 
@@ -176,6 +174,6 @@ BMad is free for everyone and always will be. Star this repo, [buy me a coffee](
 
 MIT License, see [LICENSE](LICENSE) for details.
 
-**BMad**, **BMAD-METHOD**, and **BMad Manticore** are trademarks of BMad Code, LLC. The code is MIT licensed; the names and branding are not.
+**BMad**, **BMAD-METHOD**, and **BMad Manticore** are trademarks of BMad Code, LLC. The code is MIT licensed; the names and branding are not. See [TRADEMARK.md](TRADEMARK.md) for details.
 
 [![Contributors](https://contrib.rocks/image?repo=bmad-code-org/bmad-manticore)](https://github.com/bmad-code-org/bmad-manticore/graphs/contributors)

@@ -19,12 +19,13 @@ my-studio/                        <- install here, run everything from here
   .env.example                    <- scaffolded by setup if any opted-in lane needs a key
   manticore/
     brand/                        <- tokens.json, production-bible.md, voice-bible.md,
-                                     blacklist.md, exemplars/, headshots/
+                                     blacklist.md, craft-checklist.md, exemplars/,
+                                     headshots/
     formats/                      <- your editable format profiles (learnings live here)
     projects/                     <- one folder per video, fully self-contained
       my-first-video/
       another-video/
-    engines/                      <- HyperFrames / OGraf workspaces
+    engines/                      <- HyperFrames workspaces
 ```
 
 Install:
@@ -35,7 +36,7 @@ npx bmad-method install --custom-source https://github.com/bmad-code-org/bmad-ma
 
 ## 2. Run mc-setup: the onboarding interview
 
-Say "talk to Manny" and he routes you here, or say "run manticore setup" directly. It walks you through everything below and writes the studio config: the `[modules.manticore]` table in `_bmad/custom/config.toml` (personal overrides go in `config.user.toml` next to it). Every other skill resolves that table with the installed `_bmad/scripts/resolve_config.py`; if it is empty, they send you back here. Re-run it any time; it updates rather than overwrites, and it detects a 0.x studio and runs a short delta interview instead of starting over. Each skill also ships its own `customize.toml` defaults, overridable per skill in `_bmad/custom/<skill>.toml`.
+Say "talk to Manny" and he routes you here, or say "run manticore setup" directly. It walks you through everything below and writes the studio config: the `[modules.manticore]` table in `_bmad/custom/config.toml` (personal overrides go in `config.user.toml` next to it). Every other skill resolves that table with the installed `_bmad/scripts/resolve_config.py`; if it is empty, they send you back here. Re-run it any time; it updates rather than overwrites, and it detects a 0.x studio and runs a short delta interview instead of starting over.
 
 What the interview covers, in order:
 
@@ -67,7 +68,7 @@ Decline it and previews and finals become offers the pipeline makes instead of a
 This is where 1.0 stops producing sparse text cards: your visual taste is captured up front and seeds the Production Bible (`{brand-path}/production-bible.md`), the styling contract every visual stage reads before authoring anything. It asks:
 
 - A creator to emulate: drop links to videos whose style you want to lean toward. Setup studies them and echoes back what it thinks the takeaway is (fast funny meme cuts? polished charts and dataviz? a particular edit rhythm?), and you confirm before anything lands in the bible. The confirmed takeaways seed every question below as proposed defaults.
-- Visual density: high (a graphic beat roughly every 10 to 20 seconds), medium (20 to 45), or low (45 to 90), on a front-loaded pacing curve. Default medium; tutorials and explainers usually want high.
+- Visual density and variety: the tier first, high (a graphic beat roughly every 10 to 20 seconds), medium (20 to 45), or low (45 to 90), on a front-loaded pacing curve, default medium and usually high for tutorials and explainers. Then the numbers the tier does not carry: a minimum beats-per-minute floor, how many distinct beat types a longer video must use and how much of it any one type may be, and the cap on plain text cards. Setup suggests a starting point for each; what you land on goes in the Production Bible, which is the only place the beats stage reads them from, so mc-retro can move them after any video.
 - Preferred image types: SVG/diagrammatic where text must be accurate, generative imagery for what does not exist, real verified imagery first for anything that does. The sourcing hierarchy is real, then generative, then hand-built text card.
 - Overlay and popup aesthetic: describe a look, point at reference screenshots or creators to emulate, or supply overlays you have already shipped.
 - Animation feel: snappy, smooth, or dramatic, plus entrance/exit conventions, mapped onto your brand tokens' motion values.
@@ -83,6 +84,7 @@ The Production Bible evolves after setup: mc-retro routes every visual-style not
 - `tokens.json`: colors, fonts, logo paths, motion timings. Every graphic in every engine reads this file; change it once, everything follows. Filled from your mined brand sources when they exist.
 - `production-bible.md`: the visual taste contract from section 4, scaffolded and filled during setup.
 - `blacklist.md`: regex patterns for LLM tells and phrases you never say. Ships with a starter set; grows every time you flag something in retro.
+- `craft-checklist.md`: the 16 hook, structure, and delivery rules mc-script checks every draft against before presenting it. Ships filled; edit or delete any rule that is wrong for how you write, and the script stage follows your copy.
 - `voice-bible.md`: the rules of how you actually talk. Setup offers a guided build: give it your published YouTube URLs or transcripts (fetched with yt-dlp, with permission) plus any reference creators, and it distills an evidence-cited bible where every rule quotes a verbatim example, measures your real wpm from your own transcript, and keeps your voice separate from reference voices. This is the highest-value asset in the studio.
 - `exemplars/`: your best published scripts as spoken transcripts, saved during the voice-bible build (`own/` and `reference/` kept separate).
 - `headshots/`: 3 to 6 approved photos of you with varied expressions (neutral, surprised, thinking, excited). Setup classifies and indexes them. When a thumbnail or generated asset needs you in it, the original photo goes straight to your image model with a "use the person in this image" prompt, and any revision re-sends the same original photo with an improved prompt, never a previous generation (chained edits degrade like a photocopy of a photocopy). Approved photos only; thumbnails are blocked until headshots exist, and setup says so loudly.
@@ -97,7 +99,7 @@ Two platform notes: on a CUDA machine the onnx-asr lane escalates to GPU with `u
 
 Render-first does not lock you out of your editor; the exit ramp is always built. Tell mc-setup what you finish in:
 
-- DaVinci Resolve or Final Cut Pro: an FCPXML timeline of trimmable clips (implemented), exported on every cut approval. Resolve 21+ users can also set `ograf-editable = true` to receive lower thirds as OGraf packages that stay editable inside Resolve's Inspector. Linux note: the free edition of Resolve cannot decode or encode H.264, H.265, or AAC, so the timeline imports but mp4 media needs transcoding to ProRes or DNxHR first (or Resolve Studio).
+- DaVinci Resolve or Final Cut Pro: an FCPXML timeline of trimmable clips (implemented), exported on every cut approval. Linux note: the free edition of Resolve cannot decode or encode H.264, H.265, or AAC, so the timeline imports but mp4 media needs transcoding to ProRes or DNxHR first (or Resolve Studio).
 - Premiere Pro: the xmeml export lane has not landed yet, so Premiere users work from the cut plan, edl.json, and the rendered preview/final, which map 1:1 onto manual cuts.
 - Descript or anything else: set `timeline-format = "none"`. You get the word-level transcript, cut decisions with reasons, and the renders; you apply the cuts in your tool.
 

@@ -18,7 +18,7 @@ In this order, conversationally, not as a lecture:
 
 ## First project advice
 
-Suggest talking-head as the first format: shortest path through every stage, and the format the pipeline has the most mileage on. A creator arriving with existing footage skips all of this and goes straight to the footage-first flow (`references/flows.md`); setup still has to exist first.
+Suggest talking-head as the first format: shortest path through every stage, and the format the pipeline has the most mileage on. A creator arriving with existing footage skips all of this and goes straight to the footage-first flow (`{skill-root}/references/flows.md`); setup still has to exist first.
 
 ## Automation questions
 

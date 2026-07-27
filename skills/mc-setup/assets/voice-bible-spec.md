@@ -16,14 +16,34 @@ The voice bible is the primary taste file for mc-script. It lives at `{brand-pat
    - Filler behavior worth keeping (authenticity) vs cutting.
    - Speaking rate: MEASURE it from a real transcript (word count / duration) and write the number into the studio config `[owner] wpm`. On-camera educators often run 180+; the generic 145 estimate is usually wrong.
 4. Every rule in the bible must cite at least one verbatim example from an exemplar.
+5. Write the cadence block (below). Step 3's "filler behavior worth keeping vs cutting" is a prose finding; the cadence block is that same finding in a form the cutter can actually read.
+
+## The cadence block (machine-readable, required by mc-cut)
+
+The cut stage reads this block directly. Without it, mc-cut falls back to a deliberately tiny built-in soft-filler list, which is safe but generic.
+
+Put a fenced block tagged `cadence` anywhere in the file:
+
+```cadence
+keep: so, here's the thing, which means, look, now
+cut: basically, honestly, kind of, you know
+```
+
+- `keep` is the creator's connective glue: words that read as filler in the abstract but are this speaker's rhythm. Anything listed here is never flagged as a filler, including hard fillers, so a creator whose "hmm" is a deliberate beat can protect it.
+- `cut` extends the soft-filler list with this creator's own tics.
+- On conflict, `keep` wins. Preserving rhythm is the safer failure: a kept filler is a small blemish, a cut cadence word changes how the creator sounds.
+- Phrases are allowed on both lists; match is case-insensitive and punctuation-stripped.
+
+Why this exists: the cutter reads these lists, not the prose above them. A cadence rule stated only in prose cannot stop the cutter flagging every sentence-initial "So" the creator uses as connective glue. Derive both lists from the exemplars in step 3, the same evidence-quote discipline as every other rule here.
 
 ## Consumers
 
 - mc-script reads it before weaving and checks output against it.
 - mc-outline uses the hook section to shape hook candidates.
+- mc-cut reads the cadence block (`cutplan.py --voice-bible`) so filler detection respects the creator's rhythm.
 - mc-retro appends corrections when the creator flags voice misses.
 
 ## Also in the brand folder
 
-- `exemplars/` as above.
-- `headshots/`: 3 to 6 approved reference photos of the creator, the input for face-consistent thumbnail generation. Approved photos only; mc-package never uses arbitrary frames from footage.
+- `{brand-path}/exemplars/` as above.
+- `{brand-path}/headshots/`: 3 to 6 approved reference photos of the creator, the input for face-consistent thumbnail generation. Approved photos only; mc-package never uses arbitrary frames from footage.

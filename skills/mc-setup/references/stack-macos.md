@@ -1,6 +1,6 @@
 # macOS default stack
 
-Selected when check_deps.py reports os Darwin. Apple Silicon is the module's reference platform; everything here is the shipped default behavior, confirmed with the creator during the mc-setup interview. Research basis: platform and capabilities audit, 2026-07-21.
+Selected when check_deps.py reports os Darwin. Apple Silicon is the module's reference platform; everything here is the shipped default behavior, confirmed with the creator during the mc-setup interview.
 
 ## Default stack (Apple Silicon)
 

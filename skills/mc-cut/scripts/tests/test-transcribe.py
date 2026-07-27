@@ -501,6 +501,156 @@ class TestProviderSwitch(unittest.TestCase):
         self.assertEqual(r.returncode, 0)
         self.assertIn("--provider", r.stdout)
 
+    def test_overlap_not_smaller_than_window_is_a_usage_error(self):
+        r = run(["missing.mp4", "-o", "out.json", "--provider", "onnx-asr",
+                 "--window", "20", "--overlap", "20"])
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("--overlap must be", r.stderr)
+
+    def test_oversized_window_warns_about_silent_drops(self):
+        # Exits 2 on the missing media, but the warning must fire first.
+        r = run(["missing.mp4", "-o", "out.json", "--provider", "onnx-asr",
+                 "--window", "120"])
+        self.assertIn("silently drops speech", r.stderr)
+        self.assertIn("verify_transcript.py", r.stderr)
+
+
+class TestWindowDefaults(unittest.TestCase):
+    """The validated windowing constants. These are not free parameters:
+    20 s isolated windows are what makes parakeet lossless (module docstring's
+    chunking note), so a change here is a behavior regression, not a tweak."""
+
+    def test_window_is_twenty_seconds(self):
+        self.assertEqual(transcribe.CHUNK_WINDOW_S, 20.0)
+
+    def test_overlap_is_three_seconds(self):
+        self.assertEqual(transcribe.CHUNK_OVERLAP_S, 3.0)
+
+    def test_overlap_is_smaller_than_window(self):
+        self.assertLess(transcribe.CHUNK_OVERLAP_S, transcribe.CHUNK_WINDOW_S)
+
+
+class TestMlxTokensToDicts(unittest.TestCase):
+    """The mlx lane's per-window token adapter. AlignedToken text already
+    carries the leading-space word boundary, so this is a field copy plus the
+    window clamp and the bare-boundary carry."""
+
+    class Tok:
+        def __init__(self, text, start, end, confidence=0.9):
+            self.text = text
+            self.start = start
+            self.end = end
+            self.confidence = confidence
+
+    def test_field_copy_preserves_leading_space_boundary(self):
+        toks = [self.Tok(" Al", 0.0, 0.2), self.Tok("right", 0.2, 0.5)]
+        out = transcribe.mlx_tokens_to_dicts(toks)
+        self.assertEqual([t["text"] for t in out], [" Al", "right"])
+        self.assertEqual(out[0]["start"], 0.0)
+        self.assertEqual(out[1]["end"], 0.5)
+        self.assertAlmostEqual(out[0]["confidence"], 0.9)
+
+    def test_output_groups_into_words_through_the_shared_helper(self):
+        toks = [self.Tok(" Al", 0.0, 0.2), self.Tok("right", 0.2, 0.5),
+                self.Tok(",", 0.5, 0.52), self.Tok(" so", 0.9, 1.1)]
+        words = transcribe.group_subwords(transcribe.mlx_tokens_to_dicts(toks))
+        self.assertEqual([w[0] for w in words], ["Alright,", "so"])
+
+    def test_clamp_caps_end_at_the_window_length(self):
+        out = transcribe.mlx_tokens_to_dicts([self.Tok(" word", 19.5, 21.0)],
+                                             clamp=20.0)
+        self.assertEqual(out[0]["end"], 20.0)
+
+    def test_end_never_precedes_start(self):
+        out = transcribe.mlx_tokens_to_dicts([self.Tok(" word", 19.9, 21.0)],
+                                             clamp=19.0)
+        self.assertEqual(out[0]["end"], out[0]["start"])
+
+    def test_bare_boundary_token_carries_onto_the_next(self):
+        toks = [self.Tok(" ", 0.0, 0.01), self.Tok("hello", 0.01, 0.4)]
+        out = transcribe.mlx_tokens_to_dicts(toks)
+        self.assertEqual([t["text"] for t in out], [" hello"])
+
+    def test_empty_token_is_dropped_without_emitting_a_word(self):
+        toks = [self.Tok("", 0.0, 0.0), self.Tok(" hi", 0.1, 0.3)]
+        out = transcribe.mlx_tokens_to_dicts(toks)
+        self.assertEqual([t["text"] for t in out], [" hi"])
+
+    def test_accepts_dict_tokens_too(self):
+        toks = [{"text": " hi", "start": 0.0, "end": 0.3, "confidence": 0.5}]
+        out = transcribe.mlx_tokens_to_dicts(toks)
+        self.assertEqual(out[0]["text"], " hi")
+        self.assertAlmostEqual(out[0]["confidence"], 0.5)
+
+
+class TestTranscribeWindowed(unittest.TestCase):
+    """The lane-agnostic driver. Both providers go through it, so a fake
+    recognizer proves the contract without either model dependency."""
+
+    def _driver(self, duration, window=20.0, overlap=3.0, tokens_for=None):
+        calls = []
+
+        def fake_recognize(wav, length):
+            calls.append((str(wav), length))
+            return tokens_for(len(calls) - 1, length) if tokens_for else []
+
+        with mock.patch.object(transcribe, "probe_duration",
+                               return_value=duration), \
+             mock.patch.object(transcribe, "extract_chunk"), \
+             contextlib.redirect_stderr(io.StringIO()):
+            text, merged, dur = transcribe.transcribe_windowed(
+                "fake.mp4", fake_recognize, window=window, overlap=overlap)
+        return text, merged, dur, calls
+
+    def test_long_media_is_split_into_many_short_windows(self):
+        # 20.5 minutes, the take that OOM'd and then dropped speech.
+        _, _, _, calls = self._driver(1230.0)
+        self.assertGreater(len(calls), 60)
+        self.assertTrue(all(length <= 20.0 + 1e-6 for _, length in calls))
+
+    def test_no_window_ever_exceeds_the_configured_size(self):
+        _, _, _, calls = self._driver(97.3, window=20.0, overlap=3.0)
+        for _, length in calls:
+            self.assertLessEqual(length, 20.0 + 1e-6)
+
+    def test_short_media_is_a_single_window(self):
+        _, _, _, calls = self._driver(12.0)
+        self.assertEqual(len(calls), 1)
+        self.assertAlmostEqual(calls[0][1], 12.0)
+
+    def test_duration_is_reported_from_the_probe(self):
+        _, _, dur, _ = self._driver(1230.0)
+        self.assertEqual(dur, 1230.0)
+
+    def test_tokens_are_offset_into_absolute_time_and_merged(self):
+        # One word per window, mid-window so it lands on its own side of both
+        # seam cuts (a word near a window edge is the merge's job, covered by
+        # TestMergeChunkTokens; this test is about the offsetting).
+        def tokens_for(i, length):
+            mid = length / 2
+            return [{"text": f" w{i}", "start": mid, "end": mid + 0.4,
+                     "confidence": 1.0}]
+
+        text, merged, _, calls = self._driver(45.0, tokens_for=tokens_for)
+        self.assertEqual(len(calls), 3)          # windows at 0, 17, 34
+        starts = [t["start"] for t in merged]
+        self.assertEqual(starts, sorted(starts))
+        self.assertAlmostEqual(starts[0], 10.0)  # window 0 + 20/2
+        self.assertAlmostEqual(starts[1], 27.0)  # window 17 + 20/2
+        self.assertAlmostEqual(starts[2], 39.5)  # window 34 + 11/2
+        self.assertEqual(text, "w0 w1 w2")
+
+    def test_every_window_word_survives_the_merge(self):
+        def tokens_for(i, length):
+            mid = length / 2
+            return [{"text": f" w{i}", "start": mid, "end": mid + 0.4,
+                     "confidence": 1.0}]
+
+        # The regression this whole workstream exists for: nothing is silently
+        # lost between the recognizer and the merged output.
+        _, merged, _, calls = self._driver(1230.0, tokens_for=tokens_for)
+        self.assertEqual(len(merged), len(calls))
+
 
 if __name__ == "__main__":
     unittest.main()
