@@ -2,9 +2,13 @@
 
 All notable changes to BMad Manticore are documented here. Dates are ISO (YYYY-MM-DD).
 
-## 2.1.0 - Unreleased
+## 3.0.0 - Unreleased
 
-The cut stage, rebuilt after its first real project. 2.0 shipped a cut pipeline that had never been run end to end on a long 4K take; the first one that was corrupted the edit in ways nothing detected. This release fixes the causes and, more importantly, makes each of them impossible to ship silently again.
+The big release: one motion-graphics engine with the full HyperFrames toolkit behind it, cross-platform support, a final render that only re-does what changed, delivery polish (loudness, captions, OBS alpha), and a cut stage rebuilt from the ground up after its first real project. Upgrading from 1.x is a clean reinstall (see README): your brand, voice bible, and format profiles live in your studio folder, not in `_bmad/`, so they survive and onboarding picks them back up.
+
+### The cut stage, rebuilt after its first real project
+
+The cut pipeline had never been run end to end on a long 4K take; the first one that was corrupted the edit in ways nothing detected. What follows fixes the causes and, more importantly, makes each of them impossible to ship silently again.
 
 ### The critical one: transcription was silently losing speech
 
@@ -50,7 +54,7 @@ Every threshold in the new cut path was set by measuring the 20.5 minute take th
 ### OGraf removed: one graphics deliverable, every editor
 
 - The mc-ograf skill and the editable-graphics lane are gone. OGraf produced graphics that stayed editable inside DaVinci Resolve 21+ and could be click-triggered live in OBS/SPX-GC, but it cost a second authoring path, a second spec to conform to, and its own scaffold and verify scripts, all to serve one editor version. Baked alpha overlays, which every editor imports, are now the only deliverable.
-- Nothing in an existing studio breaks. `ograf` joins `remotion` as a permanent compatibility alias for `hyperframes` wherever an engine is named, so an in-flight beat table or a copied format profile keeps working and no creator file is rewritten. `[editor] ograf-editable` is retired: a config written before 2.1.0 may still carry it and it is simply ignored.
+- Nothing in an existing studio breaks. `ograf` joins `remotion` as a permanent compatibility alias for `hyperframes` wherever an engine is named, so an in-flight beat table or a copied format profile keeps working and no creator file is rewritten. `[editor] ograf-editable` is retired: a config written before 3.0.0 may still carry it and it is simply ignored.
 - Livestream lower thirds and topic cards are now self-contained local HTML styled from tokens.json, alongside the scenes that already worked that way. SPX-GC and OBS browser sources drive them the same as before, without an editor-specific package format.
 
 ### The rule behind all of it
@@ -61,10 +65,6 @@ Every threshold in the new cut path was set by measuring the 20.5 minute take th
 - Blocking gates now carry an acknowledged override. The transcript gate takes `--accept-region <start>-<end> --reason "<why>"`, matching what source QC already had, because not every audible span with no words is lost speech: a laugh, a music bed, or an off-mic aside reads the same way to a coverage scan. A gate with no way past it gets worked around in ways that leave no trace, which is worse than one that records who signed off and why.
 - `cutplan.py` refuses to run when `-o`, `--audio-map` or `--voice-bible` are supplied twice. The skill appends the customization flag string after its own arguments and argparse lets the later one win, so an override file could have pointed the audio map somewhere else and broken the two-source rule with nothing to show for it. The boundary was a comment; it is now enforced.
 - Published or on-YouTube source should pull captions with `yt-dlp` rather than running local ASR, which is faster, free at any length, and sidesteps the local-model failure mode entirely. Local ASR only ever ran on raw unpublished recordings, which is exactly why these bugs went unnoticed for so long.
-
-## 2.0.0 - Unreleased
-
-The big release: one motion-graphics engine with the full HyperFrames toolkit behind it, cross-platform support, a final render that only re-does what changed, and delivery polish (loudness, captions, OBS alpha). Upgrading from 1.x is a clean reinstall (see README): your brand, voice bible, and format profiles live in your studio folder, not in `_bmad/`, so they survive and onboarding picks them back up.
 
 ### Motion graphics: one engine, the whole HyperFrames toolkit
 

@@ -100,7 +100,7 @@ Gate 4 has two equally supported paths: the offered `renders/final.mp4`, or the 
 - Everything is themed through `{brand-path}/tokens.json`. Component sourcing rule: registries and open libraries first, author from scratch only when nothing fits.
 - Engine workspaces (the pinned HyperFrames project) live at `{engines-path}`; mc-setup or the first graphics run initializes them.
 - Compatibility aliases (unconditional, any vintage): `remotion` and `ograf` are permanent aliases for `hyperframes` wherever an engine is named, whether a beat-table `engine` value or a format profile's `engine_overlays`/`engine_stingers` frontmatter. A studio configured before a given engine was dropped keeps its own copied profiles and beat tables naming it; every skill reads those as `hyperframes` and no creator file is ever rewritten. Neither has an engine doc or workspace to route to.
-- `[editor] ograf-editable` is a retired key. A studio config written before 2.1.0 may still carry it; ignore it rather than acting on it, and never write it.
+- `[editor] ograf-editable` is a retired key. A studio config written before 3.0.0 may still carry it; ignore it rather than acting on it, and never write it.
 
 ## The beat table (engine-neutral graphics contract)
 

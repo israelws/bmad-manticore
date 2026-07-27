@@ -41,7 +41,7 @@ Propose the most visually ambitious composition the Production Bible allows befo
 
 Across the plan as a whole, hold the numbers in the Production Bible's visual density and variety section: type variety, the cap on static text cards, and the beats-per-minute floor for the resolved tier, which times the edited runtime in minutes gives the minimum beat count. Resolve them for this format first, since a per-project-type section in the bible overrides the global one. Nothing scripted checks them, so they are yours to hold, and the first 30-60 seconds run at roughly double density per the pacing curve.
 
-`engine` comes from the format profile defaults and PIPELINE.md's engine policy. A profile that still names `remotion` in its `engine_overlays`/`engine_stingers` frontmatter (a studio configured before 2.0.0) is written into the table as `hyperframes` per the engine policy's compatibility alias, never as `remotion`. Rows needing farmed assets carry the asset id in `asset` and become the mc-assets shopping list; all other rows carry `null`.
+`engine` comes from the format profile defaults and PIPELINE.md's engine policy. A profile that still names `remotion` in its `engine_overlays`/`engine_stingers` frontmatter (a studio configured before 3.0.0) is written into the table as `hyperframes` per the engine policy's compatibility alias, never as `remotion`. Rows needing farmed assets carry the asset id in `asset` and become the mc-assets shopping list; all other rows carry `null`.
 
 ## The CTA pass
 

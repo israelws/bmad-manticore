@@ -2,7 +2,7 @@
 
 # BMad Manticore
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](.claude-plugin/marketplace.json)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue)](.claude-plugin/marketplace.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-%3E%3D3.11-blue?logo=python&logoColor=white)](https://www.python.org)
 [![uv](https://img.shields.io/badge/uv-package%20manager-blueviolet?logo=uv)](https://docs.astral.sh/uv/)
@@ -10,9 +10,9 @@
 
 **From brain dump to a rendered, graphics-rich video, in your own words.**
 
-## New in 2.0
+## New in 3.0
 
-Motion graphics run entirely on [HyperFrames](https://hyperframes.heygen.com), with its Agent Skills installed and favored at setup so the agent can reach the whole toolkit: color grading, background removal, WebGL shader transitions, kinetic captions, data-viz, 3D device mockups, HDR and 4K delivery, and a 100-plus block catalog. It all runs locally, with no account or credits. The final render is incremental (a fix on a long video re-renders in seconds, not minutes), finals are loudness-normalized by default, and Windows, Linux, and Intel Mac lanes are code-complete. See the [changelog](CHANGELOG.md) for everything that changed and why.
+Motion graphics run entirely on [HyperFrames](https://hyperframes.heygen.com), with its Agent Skills installed and favored at setup so the agent can reach the whole toolkit: color grading, background removal, WebGL shader transitions, kinetic captions, data-viz, 3D device mockups, HDR and 4K delivery, and a 100-plus block catalog. It all runs locally, with no account or credits. The final render is incremental (a fix on a long video re-renders in seconds, not minutes), finals are loudness-normalized by default, and Windows, Linux, and Intel Mac lanes are code-complete. The cut stage was rebuilt after its first real 4K project: transcription windows in short isolated passes and is verified for completeness before anything consumes it, cut timing comes from an audio silence map rather than transcript timestamps, renders validate and move into place atomically instead of writing their output path directly, and an editorial pass reads the edited transcript against the brief before gate 2. See the [changelog](CHANGELOG.md) for everything that changed and why.
 
 Upgrading from an earlier version: back up anything custom you want to keep, then remove the `_bmad/` and `_bmad-output/` folders from your studio and reinstall (see [Install](#install)). Start your agent and say `hey manny lets get this all set up!`, then follow onboarding. Your brand kit, voice bible, and format profiles live in your studio folder (not in `_bmad/`), so they survive the reinstall: onboarding finds them, and if it does not, point it at them so it can reuse or update them.
 
@@ -147,10 +147,10 @@ Taste lives in files (your voice bible, Production Bible, format profiles, brand
 
 ## Status
 
-2.0.0 is shaped by real production use. Honest state as of 2026-07-23:
+3.0.0 is shaped by real production use. Honest state as of 2026-07-23:
 
 - Proven in production: the full cut lane (parakeet-mlx word-level transcription validated on real footage, cut candidate detection, edl.json, FCPXML export, preview render with boundary-frame verification), Manny as the front door, setup and dependency checking, config resolution, project scaffolding, the render lane (composited preview and the offered final render), the expanded setup interview, the Production Bible, creativity mandates and the CTA system, footage-first ingest, series support, the graphics toolkit, CLI-registry asset farming, the OBS stream pack, the mc-audio local sound lanes (validated end to end on Apple Silicon), and the retro loop.
-- New in 2.0, implemented and unit-tested, with the least real-project mileage: HyperFrames as the sole motion-graphics engine with its Agent Skills installed at setup, the incremental content-addressed final render, default -14 LUFS loudness normalization, and the cross-platform stack (onnx-asr transcription and the per-OS hardware-encoder ladders on Windows, Linux, and Intel Mac) — code-complete and covered by tests, but treat the first run on non-Apple-Silicon hardware as a shakedown.
+- New in 3.0, implemented and unit-tested, with the least real-project mileage: HyperFrames as the sole motion-graphics engine with its Agent Skills installed at setup, the incremental content-addressed final render, default -14 LUFS loudness normalization, and the cross-platform stack (onnx-asr transcription and the per-OS hardware-encoder ladders on Windows, Linux, and Intel Mac) — code-complete and covered by tests, but treat the first run on non-Apple-Silicon hardware as a shakedown.
 - The writing lane (braindump, outline, script) is the core promise and is wired end to end with live blacklist linting; it has had the least real-video exercise of the core stages, so treat your first run through it as a shakedown and feed mc-retro afterward.
 - Planned: Premiere (xmeml) and CMX3600 EDL export lanes, per-episode stream packs with the Ecamm target (the named 1.0.x fast-follow), multitrack recording support, the remaining audio lanes (full songs with vocals, plus the paid opt-in rungs of the audio ladder), and a research/show-prep skill. See [TODO.md](TODO.md) for the full roadmap.
 
@@ -174,6 +174,6 @@ BMad is free for everyone and always will be. Star this repo, [buy me a coffee](
 
 MIT License, see [LICENSE](LICENSE) for details.
 
-**BMad**, **BMAD-METHOD**, and **BMad Manticore** are trademarks of BMad Code, LLC. The code is MIT licensed; the names and branding are not.
+**BMad**, **BMAD-METHOD**, and **BMad Manticore** are trademarks of BMad Code, LLC. The code is MIT licensed; the names and branding are not. See [TRADEMARK.md](TRADEMARK.md) for details.
 
 [![Contributors](https://contrib.rocks/image?repo=bmad-code-org/bmad-manticore)](https://github.com/bmad-code-org/bmad-manticore/graphs/contributors)
